@@ -111,7 +111,7 @@ async function copyLink(partner) {
         </div></Card>
 
         <Modal :show="!!editing" :title="editing?.id ? $t('partners.edit') : $t('partners.add')" width="max-w-2xl" @close="editing = null">
-            <form id="partner-form" class="grid gap-4 sm:grid-cols-2" @submit.prevent="save">
+            <form id="partner-form" class="grid grid-cols-1 gap-4 sm:grid-cols-2" @submit.prevent="save">
                 <Field v-model="form.name.fa" :label="$t('partners.name_fa')" required :error="form.errors['name.fa']" />
                 <Field v-model="form.name.en" :label="$t('partners.name_en')" dir="ltr" required :error="form.errors['name.en']" />
                 <Field v-model="form.type" as="select" :label="$t('partners.type')" :options="typeOptions" required :error="form.errors.type" />

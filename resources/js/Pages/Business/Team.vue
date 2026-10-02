@@ -47,7 +47,7 @@ const revoke = (invitation) => router.delete(route('business.team.revoke', { inv
 
 <template>
     <AppLayout :title="$t('team.title')" :subtitle="$t('team.subtitle')">
-        <div class="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
             <div class="space-y-6">
                 <Card :title="$t('team.members')">
                     <ul class="divide-y divide-[var(--border)]">

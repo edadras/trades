@@ -84,7 +84,7 @@ const propose = (id) => router.post(route('review.cases.propose', { case: props.
             </ul>
         </Card>
         <Modal :show="picker" :title="$t('review.propose_expert')" width="max-w-3xl" @close="picker = false">
-            <div class="grid gap-4 md:grid-cols-2">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <ExpertCard v-for="c in candidates" :key="c.expert.id" :expert="c.expert" :score="c.score ?? undefined" :reasons="c.reasons">
                     <Button size="sm" class="mt-4" icon="plus" @click="propose(c.expert.id)">{{ $t('review.propose') }}</Button>
                 </ExpertCard>

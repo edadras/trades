@@ -78,7 +78,7 @@ const submitRequest = () => post(request, 'cases.documents.request', requestModa
             <form id="task-form" class="space-y-4" @submit.prevent="submitTask">
                 <Field v-model="task.title" :label="$t('fields.title')" required :error="task.errors.title" />
                 <Field v-model="task.description" as="textarea" :rows="2" :label="$t('fields.description')" />
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Field v-model="task.owner_role" as="select" :options="owners" :label="$t('tasks.owner')" required />
                     <DateTimeField v-model="task.due_at" :label="$t('fields.due_at')" :error="task.errors.due_at" />
                 </div>
@@ -89,7 +89,7 @@ const submitRequest = () => post(request, 'cases.documents.request', requestModa
         <Modal :show="meetingModal" :title="$t('appointments.add')" @close="meetingModal = false">
             <form id="meeting-form" class="space-y-4" @submit.prevent="submitMeeting">
                 <Field v-model="meeting.title" :label="$t('fields.title')" required :error="meeting.errors.title" />
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <DateTimeField v-model="meeting.starts_at" :label="$t('fields.starts_at')" required :error="meeting.errors.starts_at" />
                     <DateTimeField v-model="meeting.ends_at" :label="$t('fields.ends_at')" required :error="meeting.errors.ends_at" />
                 </div>

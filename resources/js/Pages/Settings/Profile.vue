@@ -14,13 +14,13 @@ const password = useForm({ current_password: '', password: '', password_confirma
 <template>
     <AppLayout :title="$t('nav.settings')">
         <SettingsNav current="profile" />
-        <div class="grid gap-6 lg:grid-cols-2">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card :title="$t('settings.profile')">
                 <form class="space-y-4" @submit.prevent="form.put(route('user-profile-information.update'), { preserveScroll: true, errorBag: 'updateProfileInformation' })">
                     <Field v-model="form.name" :label="$t('fields.full_name')" required :error="form.errors.name" />
                     <Field v-model="form.email" :label="$t('fields.email')" type="email" dir="ltr" required :error="form.errors.email" />
                     <Field v-model="form.phone" :label="$t('fields.phone')" dir="ltr" :error="form.errors.phone" :hint="$t('settings.phone_hint')" />
-                    <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <Field v-model="form.locale" as="select" :label="$t('fields.preferred_language')" :options="$page.props.options.languages" />
                         <Field v-model="form.timezone" as="select" :label="$t('settings.timezone')" :options="['Asia/Tehran', 'Asia/Dubai', 'Europe/Istanbul', 'Europe/Berlin', 'Europe/London', 'America/Toronto', 'UTC'].map((z) => ({ value: z, label: z }))" />
                     </div>

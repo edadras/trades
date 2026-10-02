@@ -12,7 +12,7 @@ defineProps({ fromCases: Array, byIndustry: Array });
     <AppLayout :title="$t('nav.learning')" :subtitle="$t('learning.subtitle')">
         <section>
             <h2 class="mb-4 text-lg font-semibold text-ink">{{ $t('learning.for_cases') }}</h2>
-            <div v-if="fromCases.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div v-if="fromCases.length" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <div v-for="a in fromCases" :key="a.id" class="relative">
                     <KnowledgeCard :article="a" />
                     <Badge tone="dark" class="absolute end-4 top-4"><span dir="ltr">{{ a.case_number }}</span></Badge>
@@ -22,7 +22,7 @@ defineProps({ fromCases: Array, byIndustry: Array });
         </section>
         <section v-if="byIndustry.length" class="mt-10">
             <h2 class="mb-4 text-lg font-semibold text-ink">{{ $t('learning.for_industry') }}</h2>
-            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"><KnowledgeCard v-for="a in byIndustry" :key="a.id" :article="a" /></div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"><KnowledgeCard v-for="a in byIndustry" :key="a.id" :article="a" /></div>
         </section>
     </AppLayout>
 </template>

@@ -46,7 +46,7 @@ const submit = () => form.post(route('register.store'), { onFinish: () => form.r
             <Field v-model="form.name" :label="$t('fields.full_name')" autocomplete="name" required :error="form.errors.name" />
             <Field v-if="form.account_type === 'business' && !invitation" v-model="form.company_name" :label="$t('fields.company_name')" required :error="form.errors.company_name" />
             <Field v-model="form.email" :label="$t('fields.email')" type="email" autocomplete="email" dir="ltr" required :readonly="!!invitation" :disabled="!!invitation" :error="form.errors.email" />
-            <div class="grid gap-4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field v-model="form.password" :label="$t('fields.password')" type="password" autocomplete="new-password" dir="ltr" required :error="form.errors.password" :hint="$t('auth.password_hint')" />
                 <Field v-model="form.password_confirmation" :label="$t('fields.password_confirmation')" type="password" autocomplete="new-password" dir="ltr" required />
             </div>

@@ -29,7 +29,7 @@ const apply = (change) => router.get(route('experts.directory'), { ...props.filt
             <div class="mt-3 flex gap-2">
                 <button v-for="l in ['fa', 'en']" :key="l" type="button" class="chip ring-1" :class="filters.language === l ? 'bg-navy-100 text-navy-900 ring-navy-200' : 'bg-white ring-[var(--border)]'" @click="apply({ language: filters.language === l ? undefined : l })">{{ $t(`languages.${l}`) }}</button>
             </div>
-            <div v-if="experts.data.length" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><ExpertCard v-for="e in experts.data" :key="e.id" :expert="e" /></div>
+            <div v-if="experts.data.length" class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"><ExpertCard v-for="e in experts.data" :key="e.id" :expert="e" /></div>
             <EmptyState v-else class="mt-8" icon="users" :title="$t('experts_page.empty')" />
             <Pagination :meta="experts" />
         </section>

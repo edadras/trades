@@ -39,7 +39,7 @@ const tone = { invited: 'amber', active: 'green', expert_declined: 'gray' };
 
 <template>
     <AppLayout :title="$t('nav.invitations')" :subtitle="$t('invitations.subtitle')">
-        <div v-if="invitations.length" class="grid gap-4 lg:grid-cols-2">
+        <div v-if="invitations.length" class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <Card v-for="inv in invitations" :key="inv.id">
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="font-mono text-xs text-gray-400" dir="ltr">{{ inv.case.number }}</span>

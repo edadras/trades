@@ -15,9 +15,9 @@ const setTab = (k) => router.get(route('cases.index'), { status: k }, { preserve
 
 <template>
     <AppLayout :title="$t('nav.cases')">
-        <template #header-actions><Button :href="route('cases.create')" size="sm" icon="plus" class="hidden sm:inline-flex">{{ $t('dashboard.new_problem') }}</Button></template>
+        <template #header-actions><span class="hidden sm:block"><Button :href="route('cases.create')" size="sm" icon="plus">{{ $t('dashboard.new_problem') }}</Button></span></template>
         <Tabs :tabs="tabs" :model-value="filters.status" @update:model-value="setTab" />
-        <div v-if="cases.data.length" class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div v-if="cases.data.length" class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             <CaseCard v-for="c in cases.data" :key="c.id" :item="c" :href="c.status === 'draft' ? route('cases.create', { case: c.number }) : route('cases.show', { case: c.number })" />
         </div>
         <EmptyState v-else class="mt-6" icon="folder" :title="$t('dashboard.no_cases')" :text="$t('dashboard.no_cases_hint')">

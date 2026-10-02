@@ -82,7 +82,7 @@ const fallbackStories = computed(() => (props.stories?.length ? props.stories : 
                 <h2 class="mt-4 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{{ $t('home.how_title') }}</h2>
                 <p class="mt-3 text-gray-500">{{ $t('home.how_subtitle') }}</p>
             </Reveal>
-            <ol class="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <ol class="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Reveal v-for="(s, i) in steps" :key="s" as="li" :delay="i * 60" :class="i === 0 ? 'lg:row-span-2' : ''">
                     <div class="card card-hover flex h-full flex-col p-5" :class="i === 0 ? 'bg-navy-950 text-white lg:justify-between' : ''">
                         <div class="flex items-center justify-between">
@@ -105,7 +105,7 @@ const fallbackStories = computed(() => (props.stories?.length ? props.stories : 
                 <h2 class="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{{ $t('home.features_title') }}</h2>
                 <p class="mx-auto mt-3 max-w-2xl text-gray-500">{{ $t('home.features_subtitle') }}</p>
             </Reveal>
-            <div class="mt-10 grid gap-3 rounded-[32px] bg-[var(--surface-muted)] p-3 ring-1 ring-[var(--border)] sm:grid-cols-2 lg:grid-cols-3">
+            <div class="mt-10 grid grid-cols-1 gap-3 rounded-[32px] bg-[var(--surface-muted)] p-3 ring-1 ring-[var(--border)] sm:grid-cols-2 lg:grid-cols-3">
                 <Reveal v-for="(f, i) in features" :key="f.key" :delay="i * 50">
                     <div class="flex h-full min-h-48 flex-col justify-between rounded-[24px] bg-white p-5 ring-1 ring-[var(--border)]">
                         <span class="grid size-12 place-items-center rounded-2xl bg-navy-900 text-white"><Icon :name="f.icon" /></span>

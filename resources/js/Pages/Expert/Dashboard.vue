@@ -30,10 +30,10 @@ const { relative, dateTime } = useI18n();
             <StatCard :label="$t('expert_dash.response_time')" :value="stats.response_hours" :suffix="$t('kpi.hours')" icon="clock" tone="emerald" />
             <StatCard :label="$t('expert_dash.completed')" :value="stats.completed_cases" icon="check" tone="emerald" />
         </section>
-        <div class="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <div class="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
             <section>
                 <h2 class="mb-4 text-lg font-semibold text-ink">{{ $t('expert_dash.active_cases') }}</h2>
-                <div v-if="cases.length" class="grid gap-4 md:grid-cols-2"><CaseCard v-for="c in cases" :key="c.id" :item="c" :href="route('expert.cases.show', { case: c.number })" /></div>
+                <div v-if="cases.length" class="grid grid-cols-1 gap-4 md:grid-cols-2"><CaseCard v-for="c in cases" :key="c.id" :item="c" :href="route('expert.cases.show', { case: c.number })" /></div>
                 <EmptyState v-else icon="folder" :title="$t('expert_dash.no_cases')" :text="$t('expert_dash.no_cases_hint')" />
             </section>
             <aside class="space-y-6">

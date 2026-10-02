@@ -88,7 +88,7 @@ class DemoSeeder extends Seeder
         }
 
         // 6) Commercial engagement with a supporter abroad → legal review before confidential data is shared.
-        $export = $this->submitCase($businesses['aria'], 'برای ورود محصولات کنسروی به بازار امارات به نماینده فروش و قرارداد توزیع نیاز داریم و شرایط مجوز صادرات را نمی‌دانیم.', ['از ماه گذشته', 'با رایزن بازرگانی صحبت کرده‌ایم'], 'fa', ['engagement_model' => 'commercial', 'engagement_terms' => 'حق‌الزحمه ثابت ماهانه + ۲٪ از فروش اولیه؛ قرارداد سه‌ماهه.'], 'export');
+        $export = $this->submitCase($businesses['aria'], 'برای ورود محصولات کنسروی به بازار صادراتی امارات به مشاور صادرات و یافتن خریدار خارجی نیاز داریم و شرایط مجوز صادرات را نمی‌دانیم.', ['از ماه گذشته', 'با رایزن بازرگانی صحبت کرده‌ایم'], 'fa', ['engagement_model' => 'commercial', 'engagement_terms' => 'حق‌الزحمه ثابت ماهانه + ۲٪ از فروش اولیه؛ قرارداد سه‌ماهه.'], 'export');
         unset($export);
 
         // 7) Team member invited to the Aria account.

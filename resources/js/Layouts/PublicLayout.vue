@@ -73,7 +73,7 @@ const year = new Date().getFullYear();
 
         <footer class="mt-20 bg-[#1b1c1f] text-white">
             <div class="mx-auto max-w-6xl px-5 py-14 sm:px-8">
-                <div class="grid gap-12 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)]">
+                <div class="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)]">
                     <div>
                         <Logo light />
                         <p class="mt-4 max-w-sm text-sm leading-7 text-white/70">{{ $t('footer.about') }}</p>

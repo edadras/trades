@@ -27,7 +27,7 @@ const submit = () =>
 
 <template>
     <AppLayout :title="$t('support.title')" :subtitle="$t('support.subtitle')">
-        <div class="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
             <Card :title="$t('support.new_title')">
                 <div class="mb-5 flex items-start gap-3 rounded-2xl bg-navy-50 p-4 text-sm leading-6 text-navy-900">
                     <Icon name="shield-check" class="mt-0.5 shrink-0 text-navy-700" />

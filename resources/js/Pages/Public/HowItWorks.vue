@@ -34,7 +34,7 @@ const principles = [['ai_suggests', 'sparkles'], ['human_decides', 'shield-check
         </section>
         <section class="mx-auto max-w-6xl px-5 pt-20 sm:px-8">
             <h2 class="text-center text-3xl font-semibold tracking-tight text-ink">{{ $t('how_page.principles') }}</h2>
-            <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div v-for="[key, icon] in principles" :key="key" class="card p-6">
                     <span class="grid size-12 place-items-center rounded-2xl bg-navy-50 text-navy-800"><Icon :name="icon" /></span>
                     <h3 class="mt-5 font-semibold text-ink">{{ $t(`how_page.p_${key}.title`) }}</h3>

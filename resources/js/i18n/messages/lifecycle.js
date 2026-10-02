@@ -3,6 +3,7 @@
 export default {
     fa: {
         lifecycle: {
+            confirm_banner_title: 'نتیجه پرونده منتظر تأیید شماست', confirm_banner_text: 'پشتیبان نتیجه را ثبت کرده است؛ آن را تأیید کنید یا اگر موافق نیستید اعتراض ثبت کنید.', confirm_banner_action: 'بررسی نتیجه',
             priority: 'اولویت‌دار', actions_taken: 'اقدامات انجام‌شده تا امروز', actions_taken_label: 'تا امروز چه کارهایی انجام داده‌اید؟ (اختیاری)',
             actions_taken_hint: 'مثلاً با چه کسی مشورت کرده‌اید یا چه راه‌حلی را امتحان کرده‌اید. این کار از پیشنهاد تکراری جلوگیری می‌کند.',
             actions_taken_placeholder: 'مثلاً: قبض‌های برق را بررسی کردیم و یک تکنسین تجهیزات را دید، اما علت مشخص نشد…',
@@ -79,6 +80,7 @@ export default {
     },
     en: {
         lifecycle: {
+            confirm_banner_title: 'The case outcome is waiting for your confirmation', confirm_banner_text: 'The supporter recorded an outcome; confirm it, or dispute it if you disagree.', confirm_banner_action: 'Review outcome',
             priority: 'Priority', actions_taken: 'What has been tried so far', actions_taken_label: 'What have you already tried? (optional)',
             actions_taken_hint: 'For example, who you consulted or which solutions you tested. This avoids repeating suggestions.',
             actions_taken_placeholder: 'e.g. We reviewed the electricity bills and had a technician inspect the equipment, but the cause is still unclear…',

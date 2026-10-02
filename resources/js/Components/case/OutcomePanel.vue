@@ -46,7 +46,7 @@ const showCloseHint = computed(() => props.item.can.record_outcome && props.item
 </script>
 
 <template>
-    <div class="grid gap-6 lg:grid-cols-2">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div class="min-w-0 space-y-6">
             <Card :title="$t('outcome.title')" :subtitle="$t('outcome.subtitle')">
                 <template v-if="item.can.reopen" #actions>

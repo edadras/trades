@@ -26,7 +26,7 @@ const columns = [{ key: 'name', label: t('table.name') }, { key: 'roles', label:
 
 <template>
     <AppLayout :title="$t('nav.users')" wide>
-        <Card class="mb-6"><div class="grid gap-3 sm:grid-cols-2">
+        <Card class="mb-6"><div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input v-model="f.q" type="search" class="input" :placeholder="$t('table.search')" />
             <select v-model="f.role" class="input"><option value="">{{ $t('table.any_role') }}</option><option v-for="r in roles" :key="r" :value="r">{{ $t(`roles.${r}`) }}</option></select>
         </div></Card>
@@ -41,7 +41,7 @@ const columns = [{ key: 'name', label: t('table.name') }, { key: 'roles', label:
         </div></Card>
         <Pagination :meta="users" />
         <Modal :show="!!editing" :title="editing?.name" @close="editing = null">
-            <div class="grid gap-1 sm:grid-cols-2"><Checkbox v-for="r in roles" :key="r" v-model="form.roles" :value="r" :label="$t(`roles.${r}`)" /></div>
+            <div class="grid grid-cols-1 gap-1 sm:grid-cols-2"><Checkbox v-for="r in roles" :key="r" v-model="form.roles" :value="r" :label="$t(`roles.${r}`)" /></div>
             <Field v-model="form.status" as="select" class="mt-4" :label="$t('table.status')" :options="[{ value: 'active', label: $t('user_status.active') }, { value: 'suspended', label: $t('user_status.suspended') }]" />
             <p v-if="Object.keys(form.errors).length" class="mt-2 text-sm text-rose-600">{{ Object.values(form.errors)[0] }}</p>
             <template #footer><Button icon="check" :loading="form.processing" @click="save">{{ $t('common.save') }}</Button></template>

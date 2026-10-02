@@ -89,7 +89,7 @@ onBeforeUnmount(() => document.body.classList.remove('pilot-report-print'));
                 <StatCard v-for="s in statCards" :key="s.key" :label="$t(`pilot_report.metrics.${s.key}`)" :value="metrics[s.key] ?? null" :icon="s.icon" :tone="s.tone" :suffix="s.suffix" />
             </section>
 
-            <section class="grid gap-4 xl:grid-cols-2 print:grid-cols-2">
+            <section class="grid grid-cols-1 gap-4 xl:grid-cols-2 print:grid-cols-2">
                 <BarChart :title="$t('pilot_report.by_category')" :data="byCategory" />
                 <BarChart :title="$t('pilot_report.outcomes')" :data="outcomes" />
             </section>
@@ -131,7 +131,7 @@ onBeforeUnmount(() => document.body.classList.remove('pilot-report-print'));
                         </DataTable>
                     </Card>
 
-                    <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] print:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] print:grid-cols-2">
                         <Card :title="$t('pilot_report.sections.ai_incidents')" class="break-inside-avoid">
                             <p v-if="!incidents.length" class="flex items-center gap-2 text-sm text-gray-500"><Icon name="check" :size="16" />{{ $t('pilot_report.none') }}</p>
                             <ul v-else class="divide-y divide-[var(--border)] text-sm">

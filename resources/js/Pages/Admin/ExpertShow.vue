@@ -18,7 +18,7 @@ const decide = (status) => { form.status = status; form.post(route('admin.expert
 
 <template>
     <AppLayout :title="expert.name" :back="route('admin.experts.index')" wide>
-        <div class="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
             <div class="space-y-6">
                 <ExpertCard :expert="expert" />
                 <Card :title="$t('expert_profile.about')"><p class="whitespace-pre-line text-sm leading-7 text-gray-700">{{ expert.bio }}</p>

@@ -15,7 +15,7 @@ const text = (n, part) => t(`notif.${n.event}.${part}`, Object.fromEntries(Objec
 
 <template>
     <AppLayout :title="$t('nav.notifications')">
-        <template #header-actions><Button size="sm" variant="light" icon="check" class="hidden sm:inline-flex" @click="router.post(route('notifications.read-all'), {}, { preserveScroll: true })">{{ $t('notif.read_all') }}</Button></template>
+        <template #header-actions><span class="hidden sm:block"><Button size="sm" variant="light" icon="check" @click="router.post(route('notifications.read-all'), {}, { preserveScroll: true })">{{ $t('notif.read_all') }}</Button></span></template>
         <Card v-if="notifications.data.length" :padded="false">
             <ul class="divide-y divide-[var(--border)]">
                 <li v-for="n in notifications.data" :key="n.id">

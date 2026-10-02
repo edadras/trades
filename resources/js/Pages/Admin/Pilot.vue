@@ -123,7 +123,7 @@ const reportColumns = [
     <AppLayout :title="$t('pilot.title')" :subtitle="$t('pilot.subtitle')" wide>
         <div class="space-y-8">
             <Card v-if="program" :padded="false" class="overflow-hidden">
-                <div class="grid gap-6 bg-navy-950 p-5 text-white sm:p-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+                <div class="grid grid-cols-1 gap-6 bg-navy-950 p-5 text-white sm:p-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
                     <div class="min-w-0 space-y-4">
                         <div class="flex flex-wrap items-center gap-2">
                             <Badge tone="glass" dot>{{ $t(`pilot.status.${program.status}`) }}</Badge>
@@ -162,7 +162,7 @@ const reportColumns = [
                     <h2 class="text-lg font-semibold text-ink">{{ $t('pilot.gates_title') }}</h2>
                     <p class="text-sm text-gray-500">{{ $t('pilot.gates_subtitle') }}</p>
                 </div>
-                <div class="grid gap-4 xl:grid-cols-3">
+                <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
                     <Card v-for="gate in gates.filter((g) => gateForms[g.id])" :key="gate.id" :padded="false" class="flex flex-col">
                         <form class="flex h-full flex-col gap-5 p-5 sm:p-6" @submit.prevent="decide(gate)">
                             <header class="flex items-start gap-3">
@@ -218,12 +218,12 @@ const reportColumns = [
                 </div>
             </section>
 
-            <div class="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+            <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
                 <Card :title="$t('pilot.form.title')" :subtitle="$t('pilot.form.subtitle')">
                     <p v-if="!canManage" class="mb-5 flex items-center gap-2 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800"><Icon name="lock" :size="16" />{{ $t('pilot.read_only') }}</p>
                     <form @submit.prevent="saveProgram">
                         <fieldset :disabled="!canManage" class="grid min-w-0 gap-6">
-                            <div class="grid gap-4 sm:grid-cols-2">
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <Field v-model="form.name.fa" :label="$t('pilot.form.name_fa')" required :error="form.errors['name.fa']" />
                                 <Field v-model="form.name.en" :label="$t('pilot.form.name_en')" dir="ltr" required :error="form.errors['name.en']" />
                                 <Field v-model="form.status" as="select" :label="$t('pilot.form.status')" :options="statusOptions" required :error="form.errors.status" />
@@ -244,7 +244,7 @@ const reportColumns = [
                                     <p class="label mb-0">{{ $t('pilot.form.value_chains') }}</p>
                                     <span class="text-xs text-gray-500">{{ $t('pilot.form.value_chains_hint', { n: number(maxGroups) }) }} ({{ number(form.value_chains.length) }}/{{ number(maxGroups) }})</span>
                                 </div>
-                                <div class="grid gap-3 sm:grid-cols-2">
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                     <button
                                         v-for="key in chainKeys"
                                         :key="key"
@@ -279,7 +279,7 @@ const reportColumns = [
                                 <p v-else class="mt-1.5 text-xs text-gray-500">{{ $t('pilot.form.business_sizes_hint') }}</p>
                             </div>
 
-                            <div class="grid gap-4 sm:grid-cols-2">
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <Field v-model="form.max_groups" type="number" min="1" max="10" dir="ltr" :label="$t('pilot.form.max_groups')" required :error="form.errors.max_groups" />
                                 <Field v-model="form.max_businesses" type="number" min="1" dir="ltr" :label="$t('pilot.form.max_businesses')" :hint="$t('pilot.form.max_businesses_hint')" :error="form.errors.max_businesses" />
                             </div>
@@ -299,7 +299,7 @@ const reportColumns = [
                                     <h4 class="font-semibold text-ink">{{ $t('pilot.form.first_month') }}</h4>
                                     <p class="text-xs text-gray-500">{{ $t('pilot.form.first_month_hint') }}</p>
                                 </div>
-                                <div v-for="key in firstMonthFields" :key="key" class="grid gap-3 md:grid-cols-2">
+                                <div v-for="key in firstMonthFields" :key="key" class="grid grid-cols-1 gap-3 md:grid-cols-2">
                                     <Field v-model="form[key].fa" as="textarea" :rows="3" :label="`${$t(`pilot.form.${key}`)} (${$t('pilot.form.in_fa')})`" :error="form.errors[`${key}.fa`]" />
                                     <Field v-model="form[key].en" as="textarea" :rows="3" dir="ltr" :label="`${$t(`pilot.form.${key}`)} (${$t('pilot.form.in_en')})`" :error="form.errors[`${key}.en`]" />
                                 </div>
@@ -314,7 +314,7 @@ const reportColumns = [
 
                 <div class="space-y-6">
                     <Card :title="$t('pilot.reports.title')" :subtitle="$t('pilot.reports.subtitle')">
-                        <form class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end xl:grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_auto]" @submit.prevent="generateReport">
+                        <form class="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end xl:grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_auto]" @submit.prevent="generateReport">
                             <DateTimeField v-model="reportForm.week_start" mode="date" :label="$t('pilot.reports.week_start')" :hint="$t('pilot.reports.week_start_hint')" :error="reportForm.errors.week_start" />
                             <Button type="submit" icon="refresh" :loading="reportForm.processing" class="sm:mb-6 xl:mb-0 2xl:mb-6">{{ $t('pilot.reports.generate') }}</Button>
                         </form>

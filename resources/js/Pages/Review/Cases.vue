@@ -25,7 +25,7 @@ const columns = [
 <template>
     <AppLayout :title="$t('nav.all_cases')" wide>
         <Card class="mb-6">
-            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <input v-model="f.q" type="search" class="input" :placeholder="$t('table.search')" />
                 <select v-model="f.status" class="input"><option value="">{{ $t('table.any_status') }}</option><option v-for="s in statuses" :key="s" :value="s">{{ $t(`status.${s}`) }}</option></select>
                 <select v-model="f.category" class="input"><option value="">{{ $t('table.any_category') }}</option><option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option></select>

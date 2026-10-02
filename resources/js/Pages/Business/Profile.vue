@@ -26,10 +26,10 @@ const levels = ['private', 'case_team', 'verified_experts', 'public'];
 
 <template>
     <AppLayout :title="$t('nav.business_profile')">
-        <form class="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]" @submit.prevent="form.put(route('business.profile.update'), { preserveScroll: true })">
+        <form class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]" @submit.prevent="form.put(route('business.profile.update'), { preserveScroll: true })">
             <div class="space-y-6">
                 <Card :title="$t('onboarding.steps.basics')">
-                    <div class="grid gap-5 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                         <Field v-model="form.trade_name" :label="$t('fields.trade_name')" required :error="form.errors.trade_name" />
                         <Field v-model="form.legal_name" :label="$t('fields.legal_name')" :error="form.errors.legal_name" />
                         <Field v-model="form.registration_number" :label="$t('fields.registration_number')" dir="ltr" :error="form.errors.registration_number" />
@@ -40,7 +40,7 @@ const levels = ['private', 'case_team', 'verified_experts', 'public'];
                     </div>
                 </Card>
                 <Card :title="$t('onboarding.steps.industry')">
-                    <div class="grid gap-5 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                         <Field v-model="form.industry" as="select" :options="opts.industries" :label="$t('fields.industry')" required :error="form.errors.industry" />
                         <Field v-model="form.size" as="select" :options="opts.sizes" :label="$t('fields.size')" required :error="form.errors.size" />
                         <Field v-model="form.employees_range" as="select" :options="opts.employee_ranges" :label="$t('fields.employees_range')" required />
@@ -51,7 +51,7 @@ const levels = ['private', 'case_team', 'verified_experts', 'public'];
                     </div>
                 </Card>
                 <Card :title="$t('onboarding.steps.contact')">
-                    <div class="grid gap-5 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                         <Field v-model="form.contact_name" :label="$t('fields.contact_name')" required :error="form.errors.contact_name" />
                         <Field v-model="form.contact_email" :label="$t('fields.contact_email')" dir="ltr" required :error="form.errors.contact_email" />
                         <Field v-model="form.contact_phone" :label="$t('fields.contact_phone')" dir="ltr" required :error="form.errors.contact_phone" />

@@ -30,7 +30,7 @@ const logoutOthers = useForm({ password: '' });
 <template>
     <AppLayout :title="$t('nav.settings')">
         <SettingsNav current="security" />
-        <div class="grid gap-6 lg:grid-cols-2">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card :title="$t('settings.two_factor')" :subtitle="$t('settings.two_factor_hint')">
                 <p v-if="twoFactor.required && !twoFactor.confirmed" class="mb-4 rounded-2xl bg-amber-50 p-3 text-sm text-amber-900">{{ $t('settings.two_factor_required') }}</p>
                 <Badge :tone="twoFactor.confirmed ? 'green' : 'gray'"><Icon :name="twoFactor.confirmed ? 'shield-check' : 'shield'" :size="12" />{{ twoFactor.confirmed ? $t('settings.enabled') : $t('settings.disabled') }}</Badge>

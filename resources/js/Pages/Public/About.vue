@@ -24,7 +24,7 @@ const values = [['network', 'network'], ['evidence', 'chart'], ['trust', 'shield
             <p class="mt-4 leading-8 text-gray-600">{{ $t('about.pilot') }}</p>
         </section>
         <section class="mx-auto max-w-6xl px-5 pt-14 sm:px-8">
-            <div class="grid gap-4 md:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div v-for="[key, icon] in values" :key="key" class="card p-6">
                     <span class="grid size-12 place-items-center rounded-2xl bg-navy-950 text-white"><Icon :name="icon" /></span>
                     <h3 class="mt-5 font-semibold text-ink">{{ $t(`about.v_${key}.title`) }}</h3>

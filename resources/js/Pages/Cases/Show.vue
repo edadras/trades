@@ -103,6 +103,15 @@ const saveDetails = () => details.patch(route('cases.details.update', { case: it
                     </div>
                 </section>
 
+                <div v-if="item.can.confirm_outcome" class="flex flex-col gap-3 rounded-3xl bg-emerald-50 p-4 text-emerald-900 ring-1 ring-emerald-200 sm:flex-row sm:items-center sm:p-5">
+                    <span class="grid size-10 shrink-0 place-items-center rounded-2xl bg-white text-emerald-700 ring-1 ring-emerald-200"><Icon name="target" :size="18" /></span>
+                    <div class="min-w-0 flex-1">
+                        <p class="font-medium">{{ $t('lifecycle.confirm_banner_title') }}</p>
+                        <p class="mt-1 text-sm leading-6">{{ $t('lifecycle.confirm_banner_text') }}</p>
+                    </div>
+                    <Button size="sm" icon="arrow-left" @click="active = 'result'">{{ $t('lifecycle.confirm_banner_action') }}</Button>
+                </div>
+
                 <div v-if="item.context === 'expert' && !item.confidential_access" class="flex items-start gap-3 rounded-3xl bg-amber-50 p-4 text-amber-900 ring-1 ring-amber-200 sm:p-5">
                     <span class="grid size-10 shrink-0 place-items-center rounded-2xl bg-white text-amber-700 ring-1 ring-amber-200"><Icon name="lock" :size="18" /></span>
                     <div class="min-w-0">
@@ -114,7 +123,7 @@ const saveDetails = () => details.patch(route('cases.details.update', { case: it
                 <Tabs v-model="active" :tabs="tabs" />
 
                 <!-- Overview -->
-                <div v-if="active === 'overview'" class="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+                <div v-if="active === 'overview'" class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
                     <div class="space-y-6">
                         <Card :title="$t('case.problem')">
                             <p v-if="item.description" class="whitespace-pre-line leading-8 text-gray-700">{{ item.description }}</p>
@@ -191,7 +200,7 @@ const saveDetails = () => details.patch(route('cases.details.update', { case: it
                     <TeamPanel :item="item" @open-supporters="scrollToProposals" />
                     <div ref="proposals"><MatchesPanel :item="item" /></div>
                 </div>
-                <div v-else-if="active === 'workspace'" class="grid gap-6 2xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+                <div v-else-if="active === 'workspace'" class="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
                     <ChatPanel :item="item" />
                     <div class="min-w-0 space-y-6"><WorkPanel :item="item" /><CollaborationPanel :item="item" :service-paths="servicePaths" /><NotesPanel :item="item" /></div>
                 </div>

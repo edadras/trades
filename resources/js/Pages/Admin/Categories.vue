@@ -53,7 +53,7 @@ function save() {
             </Card>
         </div>
         <Modal :show="!!editing" :title="editing?.id ? $t('common.edit') : $t('categories.add')" width="max-w-2xl" @close="editing = null">
-            <form id="cat-form" class="grid gap-4 sm:grid-cols-2" @submit.prevent="save">
+            <form id="cat-form" class="grid grid-cols-1 gap-4 sm:grid-cols-2" @submit.prevent="save">
                 <Field v-model="form.name.fa" :label="$t('kpi.name_fa')" required :error="form.errors['name.fa']" />
                 <Field v-model="form.name.en" :label="$t('kpi.name_en')" dir="ltr" required :error="form.errors['name.en']" />
                 <Field v-model="form.slug" label="Slug" dir="ltr" required :error="form.errors.slug" />

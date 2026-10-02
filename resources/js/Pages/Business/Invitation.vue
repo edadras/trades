@@ -59,7 +59,7 @@ const homeHref = computed(() => route(page.props.auth?.user?.home ?? 'dashboard'
 
             <template v-if="isGuest">
                 <p class="text-sm leading-6 text-gray-600">{{ $t('invite.guest_hint') }}</p>
-                <div class="grid gap-3 sm:grid-cols-2">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <Button :href="route('register', { invitation: token, email: invitation.email })" block size="lg" icon="plus">{{ $t('invite.register') }}</Button>
                     <Button :href="route('login')" variant="light" block size="lg" icon="key">{{ $t('invite.login') }}</Button>
                 </div>

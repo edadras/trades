@@ -9,7 +9,7 @@ defineProps({ title: String, subtitle: String, wide: Boolean });
 </script>
 
 <template>
-    <div class="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+    <div class="grid grid-cols-1 min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
         <aside class="hero-gradient relative hidden overflow-hidden p-10 text-white lg:flex lg:flex-col lg:justify-between">
             <Link :href="route('home')"><Logo light /></Link>
             <div class="relative z-10 max-w-md">

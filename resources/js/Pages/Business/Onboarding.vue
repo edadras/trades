@@ -50,7 +50,7 @@ const privacyFields = Object.keys(b.privacy);
             <Logo />
             <LocaleSwitch />
         </header>
-        <div class="mx-auto grid max-w-6xl gap-8 px-5 pb-16 sm:px-10 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <div class="mx-auto grid grid-cols-1 max-w-6xl gap-8 px-5 pb-16 sm:px-10 lg:grid-cols-[260px_minmax(0,1fr)]">
             <aside class="lg:sticky lg:top-6 lg:self-start">
                 <p class="text-sm text-gray-500">{{ $t('onboarding.progress', { n: number(current), total: number(steps) }) }}</p>
                 <div class="mt-2 h-2 rounded-full bg-navy-100"><div class="h-full rounded-full bg-navy-600 transition-all duration-500" :style="{ width: `${(current / steps) * 100}%` }" /></div>
@@ -75,7 +75,7 @@ const privacyFields = Object.keys(b.privacy);
                         <Field v-model="form.legal_name" :label="$t('fields.legal_name')" :error="form.errors.legal_name" />
                     </template>
                     <template v-else-if="current === 2">
-                        <div class="grid gap-5 sm:grid-cols-2">
+                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                             <Field v-model="form.registration_number" :label="$t('fields.registration_number')" dir="ltr" :error="form.errors.registration_number" :hint="$t('onboarding.encrypted')" />
                             <Field v-model="form.founded_year" :label="$t('fields.founded_year')" type="number" dir="ltr" :error="form.errors.founded_year" />
                         </div>
@@ -92,7 +92,7 @@ const privacyFields = Object.keys(b.privacy);
                         <div><p class="label">{{ $t('fields.employees_range') }}</p><ChoiceChips v-model="form.employees_range" :options="opts.employee_ranges" /><p v-if="form.errors.employees_range" class="mt-1 text-sm text-rose-600">{{ form.errors.employees_range }}</p></div>
                     </template>
                     <template v-else-if="current === 5">
-                        <div class="grid gap-5 sm:grid-cols-2">
+                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                             <Field v-model="form.country" as="select" :options="opts.countries" :label="$t('fields.country')" required :error="form.errors.country" />
                             <Field v-if="form.country === 'IR'" v-model="form.province" as="select" :options="opts.provinces" :label="$t('fields.province')" :error="form.errors.province" />
                             <Field v-else v-model="form.province" :label="$t('fields.province')" :error="form.errors.province" />
@@ -102,7 +102,7 @@ const privacyFields = Object.keys(b.privacy);
                     </template>
                     <template v-else-if="current === 6">
                         <Field v-model="form.contact_name" :label="$t('fields.contact_name')" required :error="form.errors.contact_name" />
-                        <div class="grid gap-5 sm:grid-cols-2">
+                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                             <Field v-model="form.contact_email" :label="$t('fields.contact_email')" type="email" dir="ltr" required :error="form.errors.contact_email" />
                             <Field v-model="form.contact_phone" :label="$t('fields.contact_phone')" type="tel" dir="ltr" required :error="form.errors.contact_phone" />
                         </div>

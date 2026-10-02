@@ -43,7 +43,7 @@ function apply(change) {
             <div class="mt-4 flex flex-wrap gap-2">
                 <button v-for="tp in types" :key="tp" type="button" class="chip ring-1" :class="filters.type === tp ? 'bg-navy-100 text-navy-900 ring-navy-200' : 'bg-white text-gray-600 ring-[var(--border)]'" @click="apply({ type: filters.type === tp ? undefined : tp })">{{ $t(`content_type.${tp}`) }}</button>
             </div>
-            <div v-if="articles.data.length" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div v-if="articles.data.length" class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <KnowledgeCard v-for="a in articles.data" :key="a.id" :article="a" />
             </div>
             <EmptyState v-else class="mt-8" icon="book" :title="$t('knowledge.empty')" />

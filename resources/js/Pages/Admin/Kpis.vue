@@ -32,7 +32,7 @@ const metricOptions = Object.keys(props.metrics).map((m) => ({ value: m, label: 
             <Button size="sm" variant="light" icon="refresh" @click="router.post(route('admin.kpis.snapshot'), {}, { preserveScroll: true })">{{ $t('kpi.snapshot') }}</Button>
             <Button size="sm" icon="plus" @click="open(null)">{{ $t('kpi.add') }}</Button>
         </template>
-        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3"><KpiCard v-for="k in live" :key="k.id" :kpi="k" /></div>
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"><KpiCard v-for="k in live" :key="k.id" :kpi="k" /></div>
         <Card class="mt-8" :title="$t('kpi.definitions')" :padded="false">
             <ul class="divide-y divide-[var(--border)]">
                 <li v-for="k in kpis" :key="k.id" class="flex flex-wrap items-center gap-3 px-5 py-4 sm:px-6">
@@ -48,7 +48,7 @@ const metricOptions = Object.keys(props.metrics).map((m) => ({ value: m, label: 
             </ul>
         </Card>
         <Modal :show="!!editing" :title="editing?.id ? $t('kpi.edit') : $t('kpi.add')" width="max-w-2xl" @close="editing = null">
-            <form id="kpi-form" class="grid gap-4 sm:grid-cols-2" @submit.prevent="save">
+            <form id="kpi-form" class="grid grid-cols-1 gap-4 sm:grid-cols-2" @submit.prevent="save">
                 <Field v-model="form.name.fa" :label="$t('kpi.name_fa')" required :error="form.errors['name.fa']" />
                 <Field v-model="form.name.en" :label="$t('kpi.name_en')" dir="ltr" required :error="form.errors['name.en']" />
                 <Field v-model="form.key" :label="$t('kpi.key')" dir="ltr" required :error="form.errors.key" />

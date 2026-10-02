@@ -37,7 +37,7 @@ const sections = [['actions', 'check', 'text-emerald-600'], ['causes', 'info', '
             <div v-if="article.video_url" class="mt-6 overflow-hidden rounded-3xl"><a :href="article.video_url" target="_blank" rel="noopener" class="flex items-center gap-3 bg-navy-950 p-5 text-white"><Icon name="video" />{{ $t('knowledge.watch_video') }}</a></div>
             <Markdown :source="article.body" class="mt-6" :dir="article.locale === 'fa' ? 'rtl' : 'ltr'" />
 
-            <div v-if="article.checklist" class="mt-10 grid gap-3 sm:grid-cols-2">
+            <div v-if="article.checklist" class="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <template v-for="[key, icon, tone] in sections" :key="key">
                     <div v-if="article.checklist[key]?.length" class="card p-5">
                         <h2 class="font-semibold text-ink">{{ $t(`guidance.${key}`) }}</h2>
@@ -60,7 +60,7 @@ const sections = [['actions', 'check', 'text-emerald-600'], ['causes', 'info', '
         </article>
         <section v-if="related.length" class="mx-auto max-w-6xl px-5 pt-16 sm:px-8">
             <h2 class="text-2xl font-semibold text-ink">{{ $t('knowledge.related') }}</h2>
-            <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><KnowledgeCard v-for="a in related" :key="a.id" :article="a" /></div>
+            <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"><KnowledgeCard v-for="a in related" :key="a.id" :article="a" /></div>
         </section>
     </PublicLayout>
 </template>

@@ -26,7 +26,7 @@ const sections = [['possible_causes', 'info', 'text-navy-600'], ['suggested_acti
                 <Badge v-if="analysis.is_sensitive" tone="red"><Icon name="shield" :size="12" />{{ $t('analysis.sensitive') }}</Badge>
                 <span class="ms-auto text-xs text-gray-400">{{ $t('analysis.version', { n: analysis.version }) }} · {{ dateTime(analysis.created_at) }}</span>
             </div>
-            <div class="mt-5 grid gap-4 sm:grid-cols-3">
+            <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div class="rounded-2xl bg-[var(--surface-muted)] p-4"><p class="text-xs text-gray-500">{{ $t('analysis.category') }}</p><p class="mt-1 font-medium text-ink">{{ analysis.category?.name ?? '—' }}</p><p v-if="analysis.subcategory" class="text-sm text-gray-500">{{ analysis.subcategory.name }}</p></div>
                 <div class="rounded-2xl bg-[var(--surface-muted)] p-4"><p class="text-xs text-gray-500">{{ $t('urgency.label') }}</p><p class="mt-1 font-medium text-ink">{{ analysis.urgency ? $t(`urgency.${analysis.urgency}`) : '—' }}</p></div>
                 <div class="rounded-2xl bg-[var(--surface-muted)] p-4"><p class="text-xs text-gray-500">{{ $t('analysis.expert_needed') }}</p><p class="mt-1 font-medium text-ink">{{ analysis.needs_expert ? $t('common.yes') : $t('analysis.self_serve') }}</p></div>
@@ -47,7 +47,7 @@ const sections = [['possible_causes', 'info', 'text-navy-600'], ['suggested_acti
             <p class="mt-1 text-sm text-amber-800">{{ $t('analysis.safety_text') }}</p>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <template v-for="[key, icon, tone] in sections" :key="key">
                 <Card v-if="g[key]?.length" :title="$t(`guidance.${key}`)">
                     <ul class="space-y-3">
@@ -67,7 +67,7 @@ const sections = [['possible_causes', 'info', 'text-navy-600'], ['suggested_acti
         </Card>
         <section v-if="contents.length">
             <h3 class="mb-3 font-semibold text-ink">{{ $t('analysis.related') }}</h3>
-            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"><KnowledgeCard v-for="a in contents" :key="a.id" :article="a" /></div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"><KnowledgeCard v-for="a in contents" :key="a.id" :article="a" /></div>
         </section>
         <p v-if="analysis.provider" class="text-xs text-gray-400" dir="ltr">engine: {{ analysis.provider }}</p>
     </div>

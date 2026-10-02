@@ -54,11 +54,11 @@ const save = () => form.put(route('expert.profile.update'), { preserveScroll: tr
             </div>
             <p v-if="p.feedback" class="w-full rounded-2xl bg-amber-50 p-3 text-sm text-amber-900">{{ p.feedback }}</p>
         </div>
-        <form class="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]" @submit.prevent="save">
+        <form class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]" @submit.prevent="save">
             <div class="space-y-6">
                 <Card :title="$t('supporter_profile.identity')">
                     <p class="label">{{ $t('supporter_profile.type_label') }}</p>
-                    <div class="grid gap-2 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <button v-for="type in ['individual', 'organization']" :key="type" type="button" class="flex items-start gap-3 rounded-[20px] p-4 text-start ring-1 transition" :class="form.supporter_type === type ? 'bg-navy-50 ring-navy-300' : 'ring-[var(--border)] hover:bg-gray-50'" :aria-pressed="form.supporter_type === type" @click="form.supporter_type = type">
                             <Icon :name="type === 'individual' ? 'user' : 'factory'" :class="form.supporter_type === type ? 'text-navy-800' : 'text-gray-400'" />
                             <span>
@@ -86,7 +86,7 @@ const save = () => form.put(route('expert.profile.update'), { preserveScroll: tr
                     <div class="space-y-5">
                         <Field v-model="form.headline" :label="$t('fields.headline')" required :error="form.errors.headline" />
                         <Field v-model="form.bio" as="textarea" :rows="5" :label="$t('fields.bio')" required :error="form.errors.bio" />
-                        <div class="grid gap-5 sm:grid-cols-3">
+                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
                             <Field v-model="form.country" as="select" :options="opts.countries" :label="$t('fields.country')" required />
                             <Field v-model="form.city" :label="$t('fields.city')" />
                             <Field v-model="form.years_experience" type="number" :label="$t('fields.years_experience')" dir="ltr" required :error="form.errors.years_experience" />

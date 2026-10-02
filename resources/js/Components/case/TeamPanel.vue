@@ -40,7 +40,7 @@ const releaseTitle = computed(() => (isBusiness.value ? 'team_case.replace_title
             <Button size="sm" variant="light" icon="plus" @click="emit('open-supporters')">{{ $t('team_case.add_second_short') }}</Button>
         </template>
 
-        <ul v-if="experts.length" class="grid gap-3 md:grid-cols-2">
+        <ul v-if="experts.length" class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <li v-for="e in experts" :key="e.id" class="flex min-w-0 flex-col rounded-3xl p-4 ring-1 ring-[var(--border)]">
                 <div class="flex items-start gap-3">
                     <Avatar :name="e.name" :src="e.avatar" />

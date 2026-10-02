@@ -27,7 +27,7 @@ const tone = { proposed: 'navy', invited: 'amber', active: 'green', rejected_by_
                 <h3 class="font-semibold text-ink">{{ $t('match.proposals') }}</h3>
                 <span v-if="item.can.decide_matches" class="text-xs text-gray-500">{{ $t('match.choose_hint') }}</span>
             </div>
-            <div v-if="item.matches.length" class="grid gap-4 md:grid-cols-2">
+            <div v-if="item.matches.length" class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <ExpertCard v-for="m in item.matches" :key="m.id" :expert="m.expert" :score="m.score" :reasons="m.reasons">
                     <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-4">
                         <Badge :tone="tone[m.status]">{{ $t(`match_status.${m.status}`) }}</Badge>

@@ -38,7 +38,7 @@ const tone = { draft: 'gray', in_review: 'amber', approved: 'green', archived: '
 
 <template>
     <AppLayout :title="a ? form.translations.fa.title || form.translations.en.title : $t('knowledge_admin.new')" :back="route('admin.knowledge.index')" wide>
-        <form class="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]" @submit.prevent="save">
+        <form class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]" @submit.prevent="save">
             <div class="space-y-6">
                 <Card>
                     <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -53,7 +53,7 @@ const tone = { draft: 'gray', in_review: 'amber', approved: 'green', archived: '
                     </div>
                 </Card>
                 <Card :title="$t('knowledge_admin.structured')" :subtitle="$t('knowledge_admin.structured_hint')">
-                    <div class="grid gap-4 md:grid-cols-2" :dir="lang === 'fa' ? 'rtl' : 'ltr'">
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2" :dir="lang === 'fa' ? 'rtl' : 'ltr'">
                         <Field v-for="k in ['causes', 'actions', 'documents', 'warnings']" :key="k" v-model="lists[k].value" as="textarea" :rows="4" :label="$t(`guidance.${k}`)" :hint="$t('knowledge_admin.one_per_line')" />
                     </div>
                 </Card>

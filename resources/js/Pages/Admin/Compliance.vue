@@ -155,7 +155,7 @@ const saveComplaint = (complaint) => complaintForm
 
             <Card :title="$t('compliance.paths')" :subtitle="$t('compliance.paths_hint')" :padded="false">
                 <ul class="mt-4 divide-y divide-[var(--border)] border-t border-[var(--border)]">
-                    <li v-for="p in paths" :key="p.id" class="grid gap-3 px-5 py-4 sm:px-6 lg:grid-cols-[minmax(0,1.2fr)_12rem_minmax(0,1.5fr)_auto] lg:items-start">
+                    <li v-for="p in paths" :key="p.id" class="grid grid-cols-1 gap-3 px-5 py-4 sm:px-6 lg:grid-cols-[minmax(0,1.2fr)_12rem_minmax(0,1.5fr)_auto] lg:items-start">
                         <div class="min-w-0">
                             <p class="flex flex-wrap items-center gap-2 font-medium text-ink">{{ p.name }} <Badge :tone="modeTone[p.mode] ?? 'gray'">{{ $t(`compliance.modes.${p.mode}`) }}</Badge></p>
                             <p class="text-xs text-gray-400" dir="ltr">{{ p.key }}</p>
@@ -229,7 +229,7 @@ const saveComplaint = (complaint) => complaintForm
                             <p class="mb-1 text-xs font-medium text-gray-500">{{ $t('complaints.body') }}</p>
                             <p class="whitespace-pre-line break-words">{{ c.body }}</p>
                         </div>
-                        <form class="grid gap-4 sm:grid-cols-[14rem_minmax(0,1fr)]" @submit.prevent="saveComplaint(c)">
+                        <form class="grid grid-cols-1 gap-4 sm:grid-cols-[14rem_minmax(0,1fr)]" @submit.prevent="saveComplaint(c)">
                             <Field v-model="complaintForm.status" as="select" :label="$t('complaints.status')" :options="complaintStatusOptions" required :error="complaintForm.errors.status" />
                             <Field v-model="complaintForm.resolution" as="textarea" :rows="3" :label="$t('complaints.resolution')" :hint="$t('complaints.resolution_hint')" :required="resolutionRequired" :error="complaintForm.errors.resolution" />
                             <div class="sm:col-span-2 flex justify-end">

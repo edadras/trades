@@ -86,13 +86,13 @@ const eligibilityReasons = computed(() =>
             <StatCard :label="$t('dashboard.recommendations')" :value="stats.recommendations" icon="book" tone="emerald" />
         </section>
 
-        <div class="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <div class="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
             <section>
                 <div class="mb-4 flex items-center justify-between">
                     <h2 class="text-lg font-semibold text-ink">{{ $t('dashboard.my_cases') }}</h2>
                     <Link :href="route('cases.index')" class="text-sm font-medium text-navy-700 hover:underline">{{ $t('common.see_all') }}</Link>
                 </div>
-                <div v-if="cases.length" class="grid gap-4 md:grid-cols-2">
+                <div v-if="cases.length" class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <CaseCard v-for="c in cases" :key="c.id" :item="c" :href="c.status === 'draft' ? route('cases.create', { case: c.number }) : route('cases.show', { case: c.number })" />
                 </div>
                 <EmptyState v-else icon="folder" :title="$t('dashboard.no_cases')" :text="$t('dashboard.no_cases_hint')">
@@ -150,7 +150,7 @@ const eligibilityReasons = computed(() =>
                 <h2 class="text-lg font-semibold text-ink">{{ $t('dashboard.recommended') }}</h2>
                 <Link :href="route('learning')" class="text-sm font-medium text-navy-700 hover:underline">{{ $t('common.see_all') }}</Link>
             </div>
-            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><KnowledgeCard v-for="a in recommended" :key="a.id" :article="a" /></div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"><KnowledgeCard v-for="a in recommended" :key="a.id" :article="a" /></div>
         </section>
     </AppLayout>
 </template>

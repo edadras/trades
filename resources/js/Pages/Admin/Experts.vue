@@ -18,7 +18,7 @@ const tone = { draft: 'gray', submitted: 'amber', in_review: 'amber', verified: 
 <template>
     <AppLayout :title="$t('nav.experts')" wide>
         <Tabs :tabs="tabs" :model-value="filters.status ?? ''" size="sm" @update:model-value="setTab" />
-        <div v-if="experts.data.length" class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div v-if="experts.data.length" class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             <ExpertCard v-for="e in experts.data" :key="e.id" :expert="e">
                 <div class="mt-4 flex items-center gap-2 border-t border-[var(--border)] pt-4">
                     <Badge :tone="tone[e.status]">{{ $t(`expert_status.${e.status}`) }}</Badge>

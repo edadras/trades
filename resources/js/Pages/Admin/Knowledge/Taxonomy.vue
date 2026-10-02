@@ -60,7 +60,7 @@ function saveSource() {
 
 <template>
     <AppLayout :title="$t('nav.knowledge_taxonomy')" :subtitle="$t('taxonomy.subtitle')" wide>
-        <div class="grid gap-6 xl:grid-cols-2">
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
             <Card :title="$t('taxonomy.categories')" :subtitle="$t('taxonomy.categories_hint')" :padded="false">
                 <template #actions><Button size="sm" icon="plus" @click="openCategory(null)">{{ $t('taxonomy.add_category') }}</Button></template>
                 <div v-if="!categories.length" class="p-5 sm:p-6"><EmptyState icon="layers" :title="$t('taxonomy.no_categories')" /></div>
@@ -100,7 +100,7 @@ function saveSource() {
         </div>
 
         <Modal :show="!!editingCategory" :title="editingCategory?.id ? $t('taxonomy.edit_category') : $t('taxonomy.add_category')" width="max-w-2xl" @close="editingCategory = null">
-            <form id="category-form" class="grid gap-4 sm:grid-cols-2" @submit.prevent="saveCategory">
+            <form id="category-form" class="grid grid-cols-1 gap-4 sm:grid-cols-2" @submit.prevent="saveCategory">
                 <Field v-model="categoryForm.name.fa" :label="$t('taxonomy.name_fa')" required :error="categoryForm.errors['name.fa']" />
                 <Field v-model="categoryForm.name.en" :label="$t('taxonomy.name_en')" dir="ltr" required :error="categoryForm.errors['name.en']" />
                 <Field v-model="categoryForm.slug" :label="$t('taxonomy.slug')" :hint="$t('taxonomy.slug_hint')" dir="ltr" required :error="categoryForm.errors.slug" />
@@ -117,7 +117,7 @@ function saveSource() {
         </Modal>
 
         <Modal :show="!!editingSource" :title="editingSource?.id ? $t('taxonomy.edit_source') : $t('taxonomy.add_source')" width="max-w-2xl" @close="editingSource = null">
-            <form id="source-form" class="grid gap-4 sm:grid-cols-2" @submit.prevent="saveSource">
+            <form id="source-form" class="grid grid-cols-1 gap-4 sm:grid-cols-2" @submit.prevent="saveSource">
                 <Field v-model="sourceForm.name" class="sm:col-span-2" :label="$t('taxonomy.source_name')" required :error="sourceForm.errors.name" />
                 <Field v-model="sourceForm.publisher" :label="$t('taxonomy.publisher')" :error="sourceForm.errors.publisher" />
                 <Field v-model="sourceForm.url" type="url" :label="$t('taxonomy.url')" dir="ltr" placeholder="https://" :error="sourceForm.errors.url" />

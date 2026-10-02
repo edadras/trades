@@ -38,7 +38,7 @@ const requestDelete = () =>
 <template>
     <AppLayout :title="$t('nav.settings')">
         <SettingsNav current="privacy" />
-        <div class="grid gap-6 lg:grid-cols-2">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card :title="$t('settings.consents')" :subtitle="$t('settings.consents_hint')">
                 <ul class="divide-y divide-[var(--border)]">
                     <li v-for="type in ['terms', 'privacy', 'data_processing', 'ai_processing', 'marketing', 'nda']" :key="type" class="flex items-center gap-3 py-3">
@@ -56,7 +56,7 @@ const requestDelete = () =>
         <section class="mt-8">
             <h2 class="text-lg font-semibold text-ink">{{ $t('privacy_data.title') }}</h2>
             <p class="mt-1 text-sm text-gray-500">{{ $t('privacy_data.subtitle') }}</p>
-            <div class="mt-4 grid gap-6 lg:grid-cols-2">
+            <div class="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <Card :title="$t('privacy_data.export_title')">
                     <p class="text-sm leading-6 text-gray-600">{{ $t('privacy_data.export_text') }}</p>
                     <Button class="mt-4" icon="download" :disabled="exportPending" :loading="exportForm.processing" @click="requestExport">{{ $t('privacy_data.export_button') }}</Button>

@@ -29,8 +29,8 @@ const expertCols = [{ key: 'name', label: t('table.expert') }, { key: 'cases', l
 <template>
     <AppLayout :title="$t('nav.admin_dashboard')" wide>
         <template #header-actions>
-            <Button v-if="canViewPilot" :href="route('admin.pilot.show')" size="sm" variant="light" icon="flag" class="hidden sm:inline-flex">{{ $t('dashboard2.pilot_link') }}</Button>
-            <Button :href="route('admin.kpis.index')" size="sm" variant="light" icon="target" class="hidden sm:inline-flex">{{ $t('nav.kpis') }}</Button>
+            <span class="hidden sm:block"><Button v-if="canViewPilot" :href="route('admin.pilot.show')" size="sm" variant="light" icon="flag">{{ $t('dashboard2.pilot_link') }}</Button></span>
+            <span class="hidden sm:block"><Button :href="route('admin.kpis.index')" size="sm" variant="light" icon="target">{{ $t('nav.kpis') }}</Button></span>
         </template>
         <section class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
             <StatCard :label="$t('admin.businesses')" :value="summary.businesses" icon="briefcase" />
@@ -56,10 +56,10 @@ const expertCols = [{ key: 'name', label: t('table.expert') }, { key: 'cases', l
                 <h2 class="text-lg font-semibold text-ink">{{ $t('admin.kpi_title') }}</h2>
                 <Link :href="route('admin.kpis.index')" class="text-sm font-medium text-navy-700 hover:underline">{{ $t('admin.manage_targets') }}</Link>
             </div>
-            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3"><KpiCard v-for="k in kpis" :key="k.id" :kpi="k" /></div>
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"><KpiCard v-for="k in kpis" :key="k.id" :kpi="k" /></div>
         </section>
 
-        <section class="mt-8 grid gap-4 xl:grid-cols-2">
+        <section class="mt-8 grid grid-cols-1 gap-4 xl:grid-cols-2">
             <LineChart :title="$t('admin.chart_over_time')" :subtitle="$t('admin.chart_weeks')" :data="charts.overTime" :series="[{ key: 'submitted', label: $t('admin.submitted') }, { key: 'resolved', label: $t('admin.resolved') }]" />
             <FunnelChart :title="$t('admin.chart_funnel')" :data="charts.funnel" />
             <BarChart :title="$t('admin.chart_category')" :data="charts.byCategory" />
