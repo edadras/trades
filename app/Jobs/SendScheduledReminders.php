@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Domain\Cases\CaseNotifier;
+use App\Domain\Cases\Models\Appointment;
+use App\Domain\Cases\Models\CaseTask;
+use App\Models\User;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Queue\Queueable;
+
+/** Deadline-approaching reminders for tasks (24h before) and appointment reminders (24h and 1h before). */
+class SendScheduledReminders implements ShouldQueue
+{
+    use Queueable;
+
+    public function handle(CaseNotifier $notifier): void
+    {
+        CaseTask::query()->pending()->whereNull('reminded_at')->whereNotNull('assignee_id')
+            ->whereBetween('due_at', [now(), now()->addDay()])->with(['case.business', 'assignee'])
+            ->each(function (CaseTask $task) use ($notifier) {
+                $notifier->notifyUser($task->assignee, $task->case, 'deadline_approaching', ['title' => $task->title, 'due' => $task->due_at->format('Y-m-d H:i')]);
+                $task->update(['reminded_at' => now()]);
+            });
+
+        Appointment::query()->where('status', 'scheduled')
+            ->where(fn ($q) => $q->whereNull('reminded_at')->orWhere('reminded_at', '<', now()->subHours(2)))
+            ->where(fn ($q) => $q->whereBetween('starts_at', [now()->addMinutes(45), now()->addMinutes(75)])
+                ->orWhereBetween('starts_at', [now()->addHours(23), now()->addHours(25)]))
+            ->with('case.business')
+            ->each(function (Appointment $appointment) use ($notifier) {
+                foreach (User::whereIn('id', $appointment->attendee_ids ?? [])->get() as $user) {
+                    $notifier->notifyUser($user, $appointment->case, 'appointment_reminder', ['title' => $appointment->title, 'when' => $appointment->starts_at->format('Y-m-d H:i')]);
+                }
+                $appointment->update(['reminded_at' => now()]);
+            });
+    }
+}
