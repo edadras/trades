@@ -19,7 +19,7 @@ class ExpertDirectoryController extends Controller
         $experts = ExpertProfile::verified()->with(['user', 'languages', 'categories'])
             ->when($filters['category'] ?? null, fn ($q, $slug) => $q->whereHas('categories', fn ($c) => $c->where('slug', $slug)->orWhereHas('parent', fn ($p) => $p->where('slug', $slug))))
             ->when($filters['language'] ?? null, fn ($q, $lang) => $q->whereHas('languages', fn ($l) => $l->where('language', $lang)))
-            ->orderByDesc('years_experience')->paginate(12)->withQueryString()->through->toCard();
+            ->orderByDesc('years_experience')->paginate(12)->withQueryString()->through(fn ($e) => $e->toCard());
 
         return Inertia::render('Public/Experts', [
             'experts' => $experts,

@@ -1,0 +1,30 @@
+# Backing services for local development / staging. The PHP app runs with `php artisan serve` or behind Nginx (see deploy/).
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: hamyar
+      MYSQL_USER: hamyar
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    ports: ["3306:3306"]
+    volumes: [mysql:/var/lib/mysql]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  meilisearch:
+    image: getmeili/meilisearch:v1.11
+    environment:
+      MEILI_ENV: development
+    ports: ["7700:7700"]
+    volumes: [meili:/meili_data]
+  clamav:
+    image: clamav/clamav:stable
+    ports: ["3310:3310"]
+  mailpit:
+    image: axllent/mailpit
+    ports: ["8025:8025", "1025:1025"]
+volumes:
+  mysql:
+  meili:

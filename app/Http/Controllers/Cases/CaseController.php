@@ -5,14 +5,17 @@ namespace App\Http\Controllers\Cases;
 use App\Domain\Cases\Actions\AnswerIntakeQuestion;
 use App\Domain\Cases\Actions\CreateCase;
 use App\Domain\Cases\Enums\CaseStatus;
+use App\Domain\Cases\Models\CaseCategory;
 use App\Domain\Cases\Models\SupportCase;
 use App\Domain\Identity\AuditLogger;
+use App\Domain\Messaging\Actions\MarkConversationRead;
 use App\Http\Controllers\Controller;
 use App\Http\Presenters\CasePresenter;
 use App\Services\Files\SecureFileStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -85,13 +88,13 @@ class CaseController extends Controller
             $audit->log('case.viewed', $case, ['context' => $context]);
         }
         if ($case->conversation && $case->conversation->hasMember($user)) {
-            app(\App\Domain\Messaging\Actions\MarkConversationRead::class)->handle($case->conversation, $user);
+            app(MarkConversationRead::class)->handle($case->conversation, $user);
         }
 
         return Inertia::render('Cases/Show', [
             'case' => $this->presenter->show($case, $user, $context),
             'tab' => $request->query('tab', 'overview'),
-            'categories' => $context === 'staff' ? \App\Domain\Cases\Models\CaseCategory::where('is_active', true)->orderBy('sort_order')->get()->map->toOption() : [],
+            'categories' => $context === 'staff' ? CaseCategory::where('is_active', true)->orderBy('sort_order')->get()->map->toOption() : [],
         ]);
     }
 
@@ -102,7 +105,7 @@ class CaseController extends Controller
         abort_unless($case->voice_path, 404);
         $audit->log('case.voice_played', $case);
 
-        return \Illuminate\Support\Facades\Storage::disk(config('platform.uploads.disk'))->response($case->voice_path, $case->number.'.'.pathinfo($case->voice_path, PATHINFO_EXTENSION), [
+        return Storage::disk(config('platform.uploads.disk'))->response($case->voice_path, $case->number.'.'.pathinfo($case->voice_path, PATHINFO_EXTENSION), [
             'Cache-Control' => 'private, no-store',
         ]);
     }

@@ -2,9 +2,9 @@
 
 namespace App\Domain\Cases\Actions;
 
+use App\Domain\AI\AIManager;
 use App\Domain\AI\Intake\IntakeInterviewer;
 use App\Domain\AI\Models\AiSession;
-use App\Domain\AI\AIManager;
 use App\Domain\Cases\Models\CaseAnswer;
 use App\Domain\Cases\Models\SupportCase;
 use App\Models\User;

@@ -4,6 +4,7 @@ namespace App\Domain\Analytics;
 
 use App\Domain\AI\Models\AiHumanReview;
 use App\Domain\Business\Models\Business;
+use App\Domain\Cases\Enums\OutcomeType;
 use App\Domain\Cases\Models\CaseCategory;
 use App\Domain\Cases\Models\SupportCase;
 use App\Domain\Experts\Models\ExpertProfile;
@@ -26,7 +27,7 @@ class DashboardReport
             'ai_accuracy' => $this->metrics->aiAgreementRate(),
             'avg_response_hours' => $this->metrics->initialReviewHours(),
             'match_acceptance' => $this->metrics->matchAcceptanceRate(),
-            'resolution_rate' => $this->metrics->outcomeRate([\App\Domain\Cases\Enums\OutcomeType::Resolved, \App\Domain\Cases\Enums\OutcomeType::PartiallyResolved]),
+            'resolution_rate' => $this->metrics->outcomeRate([OutcomeType::Resolved, OutcomeType::PartiallyResolved]),
             'satisfaction' => $this->metrics->value('satisfaction_avg'),
         ];
     }
@@ -42,7 +43,7 @@ class DashboardReport
     public function casesByRegion(): array
     {
         return SupportCase::real()->join('businesses', 'businesses.id', '=', 'cases.business_id')
-            ->selectRaw("coalesce(businesses.province, businesses.country) as region, count(*) as c")
+            ->selectRaw('coalesce(businesses.province, businesses.country) as region, count(*) as c')
             ->groupBy('region')->orderByDesc('c')->limit(10)->get()
             ->map(fn ($r) => ['key' => $r->region, 'label' => __('options.provinces.'.$r->region) !== 'options.provinces.'.$r->region ? __('options.provinces.'.$r->region) : __('options.countries.'.$r->region), 'value' => (int) $r->c])->all();
     }

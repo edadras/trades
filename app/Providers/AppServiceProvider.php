@@ -3,10 +3,19 @@
 namespace App\Providers;
 
 use App\Domain\AI\AIManager;
+use App\Domain\Analytics\Models\Kpi;
+use App\Domain\Business\Models\Business;
+use App\Domain\Business\Models\BusinessDocument;
+use App\Domain\Cases\Models\CaseDocument;
 use App\Domain\Cases\Models\SupportCase;
+use App\Domain\Experts\Models\ExpertDocument;
+use App\Domain\Experts\Models\ExpertProfile;
 use App\Domain\Identity\AuditLogger;
+use App\Domain\Knowledge\Models\KnowledgeArticle;
+use App\Domain\Messaging\Models\MessageAttachment;
 use App\Events\CaseStatusChanged;
 use App\Listeners\NotifyCaseStatusChanged;
+use App\Models\User;
 use App\Policies\SupportCasePolicy;
 use App\Services\Files\ClamAvScanner;
 use App\Services\Files\FileScanner;
@@ -41,16 +50,16 @@ class AppServiceProvider extends ServiceProvider
         Route::pattern('locale', implode('|', config('platform.locales')));
 
         Relation::enforceMorphMap([
-            'user' => \App\Models\User::class,
-            'business' => \App\Domain\Business\Models\Business::class,
+            'user' => User::class,
+            'business' => Business::class,
             'case' => SupportCase::class,
-            'expert_profile' => \App\Domain\Experts\Models\ExpertProfile::class,
-            'knowledge_article' => \App\Domain\Knowledge\Models\KnowledgeArticle::class,
-            'case_document' => \App\Domain\Cases\Models\CaseDocument::class,
-            'business_document' => \App\Domain\Business\Models\BusinessDocument::class,
-            'expert_document' => \App\Domain\Experts\Models\ExpertDocument::class,
-            'message_attachment' => \App\Domain\Messaging\Models\MessageAttachment::class,
-            'kpi' => \App\Domain\Analytics\Models\Kpi::class,
+            'expert_profile' => ExpertProfile::class,
+            'knowledge_article' => KnowledgeArticle::class,
+            'case_document' => CaseDocument::class,
+            'business_document' => BusinessDocument::class,
+            'expert_document' => ExpertDocument::class,
+            'message_attachment' => MessageAttachment::class,
+            'kpi' => Kpi::class,
         ]);
 
         Gate::policy(SupportCase::class, SupportCasePolicy::class);

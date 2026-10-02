@@ -28,6 +28,12 @@
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="AI_PROVIDER" value="local"/>
+        <env name="FILE_SCANNER" value="none"/>
+        <env name="SCOUT_DRIVER" value="collection"/>
+        <env name="INERTIA_SSR_ENABLED" value="false"/>
+        <env name="PLATFORM_REQUIRE_ADMIN_2FA" value="false"/>
+        <env name="PRIVATE_FILES_DISK" value="private"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>

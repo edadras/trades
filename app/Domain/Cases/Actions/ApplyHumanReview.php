@@ -48,6 +48,12 @@ class ApplyHumanReview
         ]);
 
         $decision = $data['decision'];
+        $changed = (isset($data['category_id']) && (int) $data['category_id'] !== (int) $analysis?->category_id)
+            || (array_key_exists('subcategory_id', $data) && (int) $data['subcategory_id'] !== (int) $analysis?->subcategory_id)
+            || (isset($data['urgency']) && $data['urgency'] !== $analysis?->urgency?->value);
+        if ($decision === 'confirmed' && $changed) {
+            $decision = 'edited';
+        }
         $finalCategory = $data['category_id'] ?? $case->category_id;
         $finalSub = array_key_exists('subcategory_id', $data) ? $data['subcategory_id'] : $case->subcategory_id;
         $finalUrgency = $data['urgency'] ?? $case->urgency?->value;

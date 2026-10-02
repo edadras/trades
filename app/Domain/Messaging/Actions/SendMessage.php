@@ -2,6 +2,7 @@
 
 namespace App\Domain\Messaging\Actions;
 
+use App\Domain\Cases\CaseNotifier;
 use App\Domain\Messaging\Models\Conversation;
 use App\Domain\Messaging\Models\Message;
 use App\Domain\Messaging\Models\MessageAttachment;
@@ -56,7 +57,7 @@ class SendMessage
                 'case' => $case?->number,
                 'from' => $sender->name,
                 'mentioned' => in_array($recipient->id, $mentions, true) ? 1 : 0,
-            ], $case ? app(\App\Domain\Cases\CaseNotifier::class)->caseUrlFor($recipient, $case).'?tab=workspace' : null));
+            ], $case ? app(CaseNotifier::class)->caseUrlFor($recipient, $case).'?tab=workspace' : null));
         }
 
         return $message;

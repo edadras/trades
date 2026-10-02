@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Review;
 use App\Domain\AI\Models\AiHumanReview;
 use App\Domain\Cases\Actions\AnalyzeCase;
 use App\Domain\Cases\Actions\ApplyHumanReview;
+use App\Domain\Cases\CaseTimeline;
 use App\Domain\Cases\Enums\Urgency;
 use App\Domain\Cases\Models\SupportCase;
 use App\Domain\Experts\Models\ExpertProfile;
 use App\Domain\Matching\Actions\ProposeExpertManually;
 use App\Domain\Matching\Actions\RunMatching;
 use App\Domain\Matching\MatchingEngine;
+use App\Domain\Messaging\Actions\EnsureCaseWorkspace;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -82,9 +84,9 @@ class CaseReviewController extends Controller
         $manager = User::findOrFail($data['user_id']);
         abort_unless($manager->isStaff(), 422);
         $case->update(['case_manager_id' => $manager->id]);
-        app(\App\Domain\Cases\CaseTimeline::class)->record($case, 'case_manager_assigned', ['name' => $manager->name]);
+        app(CaseTimeline::class)->record($case, 'case_manager_assigned', ['name' => $manager->name]);
         if ($case->conversation) {
-            app(\App\Domain\Messaging\Actions\EnsureCaseWorkspace::class)->handle($case);
+            app(EnsureCaseWorkspace::class)->handle($case);
         }
 
         return back()->with('success', __('app.saved'));

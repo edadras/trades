@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Expert;
 
+use App\Domain\AI\Safety\PiiRedactor;
 use App\Domain\Matching\Actions\RespondToInvitation;
 use App\Domain\Matching\Enums\MatchStatus;
 use App\Domain\Matching\Models\ExpertMatch;
@@ -60,7 +61,7 @@ class InvitationController extends Controller
     /** Removes the business name and direct identifiers from the summary shown before acceptance. */
     private function anonymise(string $text, $case): string
     {
-        $text = app(\App\Domain\AI\Safety\PiiRedactor::class)->redact($text);
+        $text = app(PiiRedactor::class)->redact($text);
         foreach (array_filter([$case->business->trade_name, $case->business->legal_name]) as $name) {
             $text = Str::replace($name, '███', $text);
         }

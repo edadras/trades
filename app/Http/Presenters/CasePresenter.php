@@ -7,6 +7,7 @@ use App\Domain\Cases\Models\SupportCase;
 use App\Domain\Matching\Enums\MatchStatus;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 /**
  * Builds the case payloads for the UI. What is included depends on who is looking:
@@ -19,7 +20,7 @@ class CasePresenter
         return [
             'id' => $case->id,
             'number' => $case->number,
-            'title' => $case->title ?: \Illuminate\Support\Str::limit((string) $case->summary, 90),
+            'title' => $case->title ?: Str::limit((string) $case->summary, 90),
             'status' => $case->status->value,
             'step' => $case->status->step(),
             'urgency' => $case->urgency?->value,

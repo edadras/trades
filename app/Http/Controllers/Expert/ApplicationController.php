@@ -51,7 +51,7 @@ class ApplicationController extends Controller
     public function submit(Request $request, SubmitExpertApplication $action): RedirectResponse
     {
         $request->validate(['nda' => ['accepted']]);
-        $profile = $request->user()->expertProfile;
+        $profile = $request->user()->expertProfile()->first();
         abort_unless($profile && in_array($profile->verification_status, [ExpertVerificationStatus::Draft, ExpertVerificationStatus::Rejected], true), 409);
         $action->handle($profile, $request->user());
 
@@ -60,7 +60,7 @@ class ApplicationController extends Controller
 
     public function uploadDocument(Request $request, SecureFileStorage $files): RedirectResponse
     {
-        $profile = $request->user()->expertProfile;
+        $profile = $request->user()->expertProfile()->first();
         abort_unless($profile, 409);
         $data = $request->validate(['file' => ['required', ...SecureFileStorage::documentRules()], 'type' => ['required', 'in:certificate,cv,id,portfolio,other'], 'title' => ['nullable', 'string', 'max:150']]);
         $doc = ExpertDocument::create($files->store($request->file('file'), "experts/{$profile->id}") + [

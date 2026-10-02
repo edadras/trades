@@ -7,6 +7,7 @@ use App\Domain\AI\Data\Classification;
 use App\Domain\AI\Providers\AIProviderException;
 use App\Domain\AI\Safety\PiiRedactor;
 use App\Domain\Cases\Enums\Urgency;
+use App\Domain\Knowledge\Models\KnowledgeArticle;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -20,7 +21,7 @@ class GuidanceComposer
     public function __construct(private readonly AIManager $ai, private readonly PiiRedactor $redactor) {}
 
     /**
-     * @param  Collection<int, array{article: \App\Domain\Knowledge\Models\KnowledgeArticle, score: float}>  $retrieved
+     * @param  Collection<int, array{article: KnowledgeArticle, score: float}>  $retrieved
      * @param  array<int, string>  $safetyFlags
      * @return array<string, mixed>
      */

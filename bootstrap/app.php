@@ -10,7 +10,10 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Inertia\Inertia;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
 use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -31,11 +34,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'staff' => EnsureStaff::class,
             'admin.2fa' => RequireTwoFactorForAdmins::class,
             'onboarded' => EnsureBusinessOnboarded::class,
-            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
         ]);
         // SetLocale must run before route-model binding so localized redirects work.
-        $middleware->prependToPriorityList(\Illuminate\Routing\Middleware\SubstituteBindings::class, SetLocale::class);
+        $middleware->prependToPriorityList(SubstituteBindings::class, SetLocale::class);
         $middleware->redirectGuestsTo(fn (Request $request) => route('login', ['locale' => app()->getLocale()]));
         $middleware->redirectUsersTo(fn (Request $request) => route($request->user()->homeRouteName(), ['locale' => app()->getLocale()]));
         $middleware->trustProxies(at: '*');

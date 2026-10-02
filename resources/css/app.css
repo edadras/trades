@@ -1,9 +1,85 @@
 @import 'tailwindcss';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
+@source '../js/**/*.vue';
+@source '../views/**/*.blade.php';
 
+/* Design tokens: deep navy / royal blue + white + very light blue. */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
+    --color-navy-50: #f3f6fd;
+    --color-navy-100: #e6edfb;
+    --color-navy-200: #c9d7f5;
+    --color-navy-300: #9db6ec;
+    --color-navy-400: #6a8fdf;
+    --color-navy-500: #3f68cc;
+    --color-navy-600: #2a4fae;
+    --color-navy-700: #213f8c;
+    --color-navy-800: #1a326f;
+    --color-navy-900: #0f2453;
+    --color-navy-950: #0b1f4b;
+    --color-ink: #0e1116;
+    --color-mist: #eef3fd;
+    --radius-card: 1.75rem;
+    --radius-xl2: 1.25rem;
+    --shadow-soft: 0 1px 2px rgb(15 36 83 / 0.04), 0 8px 24px -12px rgb(15 36 83 / 0.12);
+    --shadow-lift: 0 2px 4px rgb(15 36 83 / 0.05), 0 18px 40px -18px rgb(15 36 83 / 0.25);
+    --animate-fade-up: fade-up 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    --animate-shimmer: shimmer 1.4s linear infinite;
+
+    @keyframes fade-up {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: none; }
+    }
+    @keyframes shimmer {
+        from { background-position: -200% 0; }
+        to { background-position: 200% 0; }
+    }
+}
+
+:root {
+    --surface: #ffffff;
+    --surface-muted: #f6f8fc;
+    --text-primary: #0e1116;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --border: #e6eaf2;
+    /* chart roles (validated reference palette, light) */
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --series-3: #1baf7a;
+    --grid: #eceef2;
+}
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { background: var(--surface); color: var(--text-primary); }
+[dir='rtl'] body { font-family: 'Vazirmatn', 'Inter', ui-sans-serif, system-ui, sans-serif; }
+[dir='rtl'] .num, .ltr-num { font-feature-settings: 'ss01'; }
+
+/* Mirror direction-bearing icons in RTL (arrows, chevrons, breadcrumbs). */
+[dir='rtl'] .flip-rtl { transform: scaleX(-1); }
+
+@layer components {
+    .card { @apply rounded-[var(--radius-card)] border border-[var(--border)] bg-white shadow-[var(--shadow-soft)]; }
+    .card-hover { @apply transition duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]; }
+    .hero-gradient { background: linear-gradient(180deg, #13306f 0%, #3a5ea8 45%, #9fb5e0 80%, #eef3fd 100%); }
+    .section-gradient { background: linear-gradient(180deg, #172f6a 0%, #3d5ea3 40%, #a9bde4 78%, #eef3fd 100%); }
+    .soft-gradient { background: linear-gradient(180deg, #ffffff 0%, #e8effc 100%); }
+    .input { @apply block w-full rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[15px] text-ink placeholder:text-gray-400 transition focus:border-navy-400 focus:ring-4 focus:ring-navy-100 focus:outline-none disabled:bg-gray-50; }
+    .label { @apply mb-1.5 block text-sm font-medium text-gray-700; }
+    .chip { @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium; }
+    .prose-app { @apply text-[15px] leading-8 text-gray-700; }
+    .prose-app h2 { @apply mt-8 mb-3 text-xl font-semibold text-ink; }
+    .prose-app h3 { @apply mt-6 mb-2 text-lg font-semibold text-ink; }
+    .prose-app ul { @apply my-3 list-disc space-y-1 ps-6; }
+    .prose-app ol { @apply my-3 list-decimal space-y-1 ps-6; }
+    .prose-app p { @apply my-3; }
+    .prose-app a { @apply text-navy-600 underline; }
+    .prose-app strong { @apply font-semibold text-ink; }
+    .skeleton { background: linear-gradient(90deg, #eef1f6 25%, #f7f9fc 37%, #eef1f6 63%); background-size: 400% 100%; @apply animate-shimmer rounded-xl; }
+    .scrollbar-none { scrollbar-width: none; }
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

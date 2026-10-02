@@ -219,12 +219,12 @@ class SupportCase extends Model
 
     public function scopeOpen(Builder $query): Builder
     {
-        return $query->whereNotIn('status', [CaseStatus::Draft->value, CaseStatus::Resolved->value, CaseStatus::Closed->value]);
+        return $query->whereNotIn($this->qualifyColumn('status'), [CaseStatus::Draft->value, CaseStatus::Resolved->value, CaseStatus::Closed->value]);
     }
 
     public function scopeReal(Builder $query): Builder
     {
-        return $query->where('status', '!=', CaseStatus::Draft->value);
+        return $query->where($this->qualifyColumn('status'), '!=', CaseStatus::Draft->value);
     }
 
     public function isClosed(): bool
@@ -241,6 +241,8 @@ class SupportCase extends Model
     /** The narrative the AI and reviewers work from: typed text plus voice transcript. */
     public function problemText(): string
     {
-        return trim(implode("\n\n", array_filter([$this->title, $this->description, $this->voice_transcript])));
+        $title = $this->title && ! str_starts_with(trim((string) $this->description), preg_replace('/[.…\s]+$/u', '', $this->title)) ? $this->title : null;
+
+        return trim(implode("\n\n", array_filter([$title, $this->description, $this->voice_transcript])));
     }
 }

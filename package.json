@@ -3,8 +3,9 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "build": "vite build && vite build --ssr",
+        "build:client": "vite build"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
@@ -20,7 +21,9 @@
         "@inertiajs/vue3": "^3.8.0",
         "@vitejs/plugin-vue": "^6.0.9",
         "@vue/server-renderer": "^3.5.43",
+        "dompurify": "^3.4.16",
         "laravel-echo": "^2.5.0",
+        "marked": "^18.0.14",
         "pusher-js": "^8.6.0",
         "vue": "^3.5.43"
     }

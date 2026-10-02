@@ -25,7 +25,7 @@ class FileDownloadController extends Controller
 
         $audit->log('file.downloaded', $file, ['type' => $type, 'name' => $file->original_name]);
 
-        $inline = $request->boolean('inline') && str_starts_with((string) $file->mime_type, 'audio/') || ($request->boolean('inline') && str_starts_with((string) $file->mime_type, 'image/'));
+        $inline = $request->boolean('inline') && preg_match('#^(audio|image)/#', (string) $file->mime_type);
 
         return Storage::disk($file->disk)->response($file->path, $file->original_name, [
             'Content-Type' => $file->mime_type ?: 'application/octet-stream',
