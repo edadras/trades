@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Business;
 use App\Domain\Cases\Enums\CaseStatus;
 use App\Domain\Cases\Models\Appointment;
 use App\Domain\Cases\Models\CaseTask;
+use App\Domain\Cases\Models\SupportCase;
 use App\Domain\Knowledge\Models\KnowledgeArticle;
 use App\Domain\Messaging\Models\Conversation;
 use App\Http\Controllers\Controller;
@@ -44,7 +45,8 @@ class DashboardController extends Controller
             ]);
 
         return Inertia::render('Business/Dashboard', [
-            'business' => ['name' => $business->trade_name, 'industry' => $business->industry],
+            'business' => ['name' => $business->trade_name, 'industry' => $business->industry, 'eligibility' => $business->eligibility_status, 'eligibility_reason' => $business->eligibility_reason, 'can_open_cases' => $business->canOpenCases(), 'role' => $business->roleOf($user)],
+            'pendingOutcomes' => SupportCase::whereIn('id', $caseIds)->whereHas('outcome', fn ($q) => $q->where('confirmation_status', 'pending'))->get(['id', 'number', 'title'])->map->only(['number', 'title']),
             'stats' => [
                 'active_cases' => $cases->filter(fn ($c) => $c->status->isOpen())->count(),
                 'waiting_actions' => CaseTask::whereIn('case_id', $caseIds)->pending()->where('owner_role', 'business')->count(),

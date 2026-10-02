@@ -2,35 +2,52 @@
 
 namespace App\Domain\Cases\Actions;
 
+use App\Domain\Cases\CaseNotifier;
 use App\Domain\Cases\CaseTimeline;
-use App\Domain\Cases\Enums\CaseStatus;
-use App\Domain\Cases\Enums\OutcomeType;
 use App\Domain\Cases\Models\CaseOutcome;
 use App\Domain\Cases\Models\SupportCase;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 /**
- * Records the result of a case. "Effective action started" and "fully resolved" are kept distinct
- * so they can be reported separately.
+ * Records the result of a case. An outcome proposed by an expert or staff member stays "pending" until the
+ * business confirms it; an outcome recorded by the business itself is confirmed immediately.
+ * "Effective action started" and "fully resolved" are kept distinct so they can be reported separately.
  */
 class RecordOutcome
 {
-    public function __construct(private readonly CaseTimeline $timeline, private readonly TransitionCaseStatus $transition) {}
+    public function __construct(
+        private readonly CaseTimeline $timeline,
+        private readonly CaseNotifier $notifier,
+        private readonly ConfirmOutcome $confirm,
+    ) {}
 
     /** @param array{outcome: string, reason: string, result_summary?: string|null} $data */
     public function handle(SupportCase $case, User $user, array $data): CaseOutcome
     {
-        $outcome = CaseOutcome::updateOrCreate(['case_id' => $case->id], [
-            'recorded_by' => $user->id,
-            'outcome' => $data['outcome'],
-            'reason' => $data['reason'],
-            'result_summary' => $data['result_summary'] ?? null,
-        ]);
+        $byBusiness = $case->business->hasMember($user);
+
+        $outcome = DB::transaction(function () use ($case, $user, $data) {
+            $case->outcomes()->whereNull('superseded_at')->update(['superseded_at' => now()]);
+
+            return CaseOutcome::create([
+                'case_id' => $case->id,
+                'recorded_by' => $user->id,
+                'outcome' => $data['outcome'],
+                'reason' => $data['reason'],
+                'result_summary' => $data['result_summary'] ?? null,
+                'confirmation_status' => 'pending',
+            ]);
+        });
+
         $this->timeline->record($case, 'outcome_recorded', ['outcome' => $data['outcome']], $user->id);
 
-        $resolvedLike = in_array(OutcomeType::from($data['outcome']), [OutcomeType::Resolved, OutcomeType::PartiallyResolved, OutcomeType::EffectiveActionStarted], true);
-        if ($resolvedLike && $case->status->canTransitionTo(CaseStatus::Resolved)) {
-            $this->transition->handle($case, CaseStatus::Resolved, 'outcome:'.$data['outcome'], $user->id);
+        if ($byBusiness) {
+            return $this->confirm->confirm($outcome, $user);
+        }
+
+        foreach ($case->business->members()->get()->push($case->business->owner)->unique('id') as $member) {
+            $this->notifier->notifyUser($member, $case, 'outcome_confirmation_requested', ['outcome' => $data['outcome']]);
         }
 
         return $outcome;

@@ -5,6 +5,7 @@ namespace App\Domain\Business\Actions;
 use App\Domain\Business\Models\Business;
 use App\Domain\Business\Models\BusinessDocument;
 use App\Domain\Identity\Actions\RecordConsent;
+use App\Domain\Pilot\Actions\EvaluateEligibility;
 use App\Models\PrivacySetting;
 use App\Models\User;
 use App\Services\Files\SecureFileStorage;
@@ -66,6 +67,9 @@ class SaveOnboardingStep
             $business->onboarding_completed_at ??= now();
         }
         $business->save();
+        if ($step === Business::ONBOARDING_STEPS && is_null($business->eligibility_status)) {
+            app(EvaluateEligibility::class)->handle($business);
+        }
 
         return $business;
     }

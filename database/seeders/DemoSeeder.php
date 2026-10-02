@@ -2,10 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Business\Actions\ManageTeam;
 use App\Domain\Business\Models\Business;
+use App\Domain\Business\Models\Partner;
 use App\Domain\Cases\Actions\AnswerIntakeQuestion;
 use App\Domain\Cases\Actions\ApplyHumanReview;
 use App\Domain\Cases\Actions\CloseCase;
+use App\Domain\Cases\Actions\ConfirmOutcome;
 use App\Domain\Cases\Actions\CreateCase;
 use App\Domain\Cases\Actions\RecordOutcome;
 use App\Domain\Cases\Actions\SaveCaseTask;
@@ -15,6 +18,8 @@ use App\Domain\Cases\Actions\SubmitSatisfaction;
 use App\Domain\Cases\Enums\CaseStatus;
 use App\Domain\Cases\Models\CaseCategory;
 use App\Domain\Cases\Models\SupportCase;
+use App\Domain\Compliance\Actions\ProcessDataRequest;
+use App\Domain\Compliance\Actions\RecordComplaint;
 use App\Domain\Experts\Enums\ExpertVerificationStatus;
 use App\Domain\Experts\Models\ExpertProfile;
 use App\Domain\Identity\Enums\Role;
@@ -22,6 +27,8 @@ use App\Domain\Matching\Actions\DecideMatch;
 use App\Domain\Matching\Actions\RespondToInvitation;
 use App\Domain\Matching\Enums\MatchStatus;
 use App\Domain\Messaging\Actions\SendMessage;
+use App\Domain\Pilot\Actions\EvaluateEligibility;
+use App\Domain\Pilot\Actions\GeneratePilotReport;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Auth;
@@ -62,7 +69,7 @@ class DemoSeeder extends Seeder
         // 4) Completed cases across categories (feed analytics, success stories and expert history).
         $closedScenarios = [
             ['nova', 'نقدینگی شرکت برای پرداخت حقوق پرسنل در دو ماه آینده کافی نیست و مطالبات از مشتریان دیر وصول می‌شود.', 'resolved', 5, 'با پیش‌بینی جریان نقد ۱۳ هفته‌ای و پیگیری مطالبات، کسری نقدینگی برطرف شد.'],
-            ['pars', 'میزان ضایعات خط تولید بسته‌بندی در سه ماه اخیر به ۱۲ درصد رسیده و مرجوعی مشتریان زیاد شده است.', 'partially_resolved', 4, 'ضایعات از ۱۲٪ به ۷٪ رسید؛ ادامه کار روی تأمین مواد اولیه.'],
+            ['pars', 'میزان ضایعات خط تولید بسته‌بندی در سه ماه اخیر به ۱۲ درصد رسیده و مرجوعی مشتریان زیاد شده است.', 'partially_resolved', 3, 'ضایعات از ۱۲٪ به ۷٪ رسید؛ ادامه کار روی تأمین مواد اولیه.'],
             ['sahel', 'می‌خواهیم صادرات زعفران به امارات را شروع کنیم ولی برای پیدا کردن مشتری خارجی و مجوز صادرات مشکل داریم.', 'effective_action_started', 5, 'سه خریدار بالقوه شناسایی و نمونه ارسال شد.'],
             ['nova', 'Our online sales have dropped by 25% in the last quarter and our social media ads are not converting.', 'resolved', 4, 'Funnel fixed; conversion recovered to previous levels.'],
             ['sahel', 'مصرف برق سردخانه ما در تابستان بسیار بالا رفته و قبض برق دو برابر شده است.', 'resolved', 5, 'با تنظیم دمای سردخانه و تعمیر عایق، مصرف ۲۲٪ کاهش یافت.'],
@@ -72,7 +79,35 @@ class DemoSeeder extends Seeder
             $this->finish($case, $reviewer, $outcome, $rating, $summary);
         }
 
-        // 5) A draft the business has not submitted yet.
+        // 5) Outcome recorded by the supporter and waiting for the business to confirm it.
+        $pending = $this->submitCase($businesses['sahel'], 'هزینه حمل یخچالی محصولات ما به مشهد و تهران در یک سال اخیر دو برابر شده و نمی‌دانیم چطور مسیرها را بهینه کنیم. مصرف برق سردخانه هم بالاست.', ['حدود یک سال', 'با دو شرکت حمل دیگر تماس گرفتیم']);
+        if ($expert = $this->engage($pending, $reviewer)) {
+            Auth::login($expert->user);
+            app(RecordOutcome::class)->handle($pending->fresh(), $expert->user, ['outcome' => 'effective_action_started', 'reason' => 'برنامه زمان‌بندی جدید حمل و تنظیم دمای سردخانه اجرا شد.', 'result_summary' => 'برنامه کاهش هزینه اجرا شد؛ نتیجه تا پایان ماه سنجیده می‌شود.']);
+            Auth::logout();
+        }
+
+        // 6) Commercial engagement with a supporter abroad → legal review before confidential data is shared.
+        $export = $this->submitCase($businesses['aria'], 'برای ورود محصولات کنسروی به بازار امارات به نماینده فروش و قرارداد توزیع نیاز داریم و شرایط مجوز صادرات را نمی‌دانیم.', ['از ماه گذشته', 'با رایزن بازرگانی صحبت کرده‌ایم'], 'fa', ['engagement_model' => 'commercial', 'engagement_terms' => 'حق‌الزحمه ثابت ماهانه + ۲٪ از فروش اولیه؛ قرارداد سه‌ماهه.'], 'export');
+        unset($export);
+
+        // 7) Team member invited to the Aria account.
+        $member = User::updateOrCreate(['email' => 'team@hamyar.test'], ['name' => 'نیما همکار', 'password' => self::PASSWORD, 'email_verified_at' => now(), 'locale' => 'fa']);
+        if (! $businesses['aria']->hasMember($member)) {
+            Auth::login($businesses['aria']->owner);
+            $team = app(ManageTeam::class);
+            $invitation = $team->invite($businesses['aria'], $businesses['aria']->owner, $member->email, 'member');
+            $team->accept($invitation, $member);
+            $team->invite($businesses['aria'], $businesses['aria']->owner, 'finance@aria.example', 'admin');
+            Auth::logout();
+        }
+
+        // 8) Support requests, data requests and the weekly pilot report.
+        app(RecordComplaint::class)->handle($businesses['nova']->owner, ['category' => 'technical', 'subject' => 'Notification emails arrive late', 'body' => 'Meeting reminder emails reached us after the meeting had started.']);
+        app(ProcessDataRequest::class)->open($businesses['nova']->owner, 'export', 'Annual compliance review');
+        app(GeneratePilotReport::class)->handle(now()->toImmutable()->subWeek(), $staff['lead'], false);
+
+        // 9) A draft the business has not submitted yet.
         Auth::login($businesses['aria']->owner);
         app(CreateCase::class)->handle($businesses['aria']->owner, $businesses['aria'], 'می‌خواهیم برای توسعه خط تولید جدید سرمایه‌گذار پیدا کنیم.', null, [], 'fa');
         Auth::logout();
@@ -93,6 +128,8 @@ class DemoSeeder extends Seeder
             'ops' => $make('ops@hamyar.test', 'مدیر عملیات', Role::OperationsManager),
             'pm' => $make('product@hamyar.test', 'مدیر محصول', Role::ProductManager),
             'legal' => $make('legal@hamyar.test', 'کارشناس حقوقی', Role::LegalCompliance),
+            'lead' => $make('lead@hamyar.test', 'مدیر برنامه پایلوت', Role::ProgramLead),
+            'network' => $make('network@hamyar.test', 'مدیر شبکه پشتیبانان', Role::NetworkManager),
         ];
     }
 
@@ -120,7 +157,11 @@ class DemoSeeder extends Seeder
                 'headline' => $headline,
                 'bio' => $headline.'. '.($country === 'IR' ? 'سابقه همکاری با ده‌ها کسب‌وکار کوچک و متوسط.' : 'Worked with dozens of SMEs in Iran and abroad.'),
                 'country' => $country, 'timezone' => $country === 'IR' ? 'Asia/Tehran' : 'Europe/Berlin', 'years_experience' => $years,
-                'industries' => $industries, 'serves_countries' => ['IR'], 'collaboration_types' => ['consultation', 'project'],
+                'industries' => $industries, 'serves_countries' => ['IR'], 'collaboration_types' => ['consultation', 'problem_review', 'mentoring', 'introduction'],
+                'supporter_type' => $key === 'invest' ? 'organization' : 'individual', 'organization_name' => $key === 'invest' ? 'Sarmaye Advisory Partners' : null,
+                'support_models' => match (true) {
+                    $key === 'invest', $key === 'export' => ['voluntary', 'free', 'commercial'], $country === 'IR' => ['voluntary', 'free', 'subsidized'], default => ['voluntary', 'free']
+                },
                 'certifications' => [['title' => 'Certified consultant', 'issuer' => 'Chamber of Commerce', 'year' => 2020]],
                 'max_active_cases' => 6, 'is_available' => true, 'verification_status' => ExpertVerificationStatus::Verified,
                 'verified_at' => now(), 'nda_accepted_at' => now(), 'nda_version' => '2026-10', 'avg_response_minutes' => random_int(60, 600),
@@ -145,6 +186,7 @@ class DemoSeeder extends Seeder
         $p = ExpertProfile::updateOrCreate(['user_id' => $applicant->id], [
             'headline' => 'مشاور صادرات فرش و صنایع‌دستی', 'bio' => 'ده سال سابقه صادرات به اروپا.', 'country' => 'IR', 'timezone' => 'Asia/Tehran',
             'years_experience' => 10, 'industries' => ['handicrafts'], 'collaboration_types' => ['consultation'], 'max_active_cases' => 3,
+            'supporter_type' => 'individual', 'support_models' => ['voluntary'],
             'verification_status' => ExpertVerificationStatus::Submitted, 'nda_accepted_at' => now(), 'nda_version' => '2026-10',
         ]);
         if (! $p->skills()->exists()) {
@@ -179,8 +221,12 @@ class DemoSeeder extends Seeder
                 'main_needs' => ['finance', 'energy'], 'onboarding_step' => Business::ONBOARDING_STEPS, 'onboarding_completed_at' => now()->subDays(random_int(10, 60)),
             ]);
             $business->members()->syncWithoutDetaching([$user->id => ['role' => 'owner']]);
+            $business->update(['partner_id' => Partner::where('referral_code', $key === 'aria' || $key === 'sahel' ? 'FOODASSN' : 'CHAMBER1')->value('id')]);
+            app(EvaluateEligibility::class)->handle($business);
             $out[$key] = $business->fresh('owner');
         }
+        // Programme lead admits an out-of-scope business as an exception (recorded with a reason).
+        $out['nova']->update(['eligibility_status' => 'eligible', 'eligibility_reason' => 'override: retail partner of an agri-food value chain']);
 
         // A newly registered business still in the onboarding wizard.
         $newUser = User::updateOrCreate(['email' => 'newbusiness@hamyar.test'], ['name' => 'کسب‌وکار تازه', 'password' => self::PASSWORD, 'email_verified_at' => now()]);
@@ -191,12 +237,14 @@ class DemoSeeder extends Seeder
         return $out;
     }
 
-    private function submitCase(Business $business, string $text, array $answers, string $locale = 'fa'): SupportCase
+    /** @param array<string, string> $engagement when set, the case is matched and accepted with these terms */
+    private function submitCase(Business $business, string $text, array $answers, string $locale = 'fa', array $engagement = [], ?string $expertKey = null): SupportCase
     {
         $owner = $business->owner;
         Auth::login($owner);
         app()->setLocale($locale);
-        $case = app(CreateCase::class)->handle($owner, $business, $text, null, [], $locale);
+        $consent = ['ai_processing' => true, 'share_with_foreign_experts' => true, 'anonymized_learning' => $business->trade_name !== 'بسته‌بندی پارس'];
+        $case = app(CreateCase::class)->handle($owner, $business, $text, null, [], $locale, $consent);
         $intake = app(AnswerIntakeQuestion::class);
         $question = $intake->next($case, $owner);
         foreach ($answers as $answer) {
@@ -209,18 +257,26 @@ class DemoSeeder extends Seeder
         Auth::logout();
         app()->setLocale('fa');
 
+        if ($engagement) {
+            $this->engage($case->fresh(), User::where('email', 'reviewer@hamyar.test')->first(), $engagement, $expertKey);
+        }
+
         return $case->fresh();
     }
 
     /** Reviewer confirms (if needed), business accepts the best match, expert joins. */
-    private function engage(SupportCase $case, User $reviewer): ?ExpertProfile
+    /** @param array<string, string> $engagement */
+    private function engage(SupportCase $case, User $reviewer, array $engagement = [], ?string $expertEmailPrefix = null): ?ExpertProfile
     {
         if ($case->status === CaseStatus::HumanReview) {
             Auth::login($reviewer);
             app(ApplyHumanReview::class)->handle($case, $reviewer, ['decision' => 'confirmed', 'run_matching' => true]);
             $case->refresh();
         }
-        $match = $case->matches()->where('status', MatchStatus::Proposed->value)->orderByDesc('score')->first();
+        $match = $case->matches()->where('status', MatchStatus::Proposed->value)
+            ->when($expertEmailPrefix, fn ($q) => $q->whereHas('expertProfile.user', fn ($u) => $u->where('email', 'like', $expertEmailPrefix.'.%')))
+            ->orderByDesc('score')->first()
+            ?? $case->matches()->where('status', MatchStatus::Proposed->value)->orderByDesc('score')->first();
         if (! $match) {
             return null;
         }
@@ -228,7 +284,7 @@ class DemoSeeder extends Seeder
         app(DecideMatch::class)->handle($match, $case->business->owner, true);
         $expertUser = $match->expertProfile->user;
         Auth::login($expertUser);
-        app(RespondToInvitation::class)->handle($match->fresh(), $expertUser, true);
+        app(RespondToInvitation::class)->handle($match->fresh(), $expertUser, true, null, $engagement ?: ['engagement_model' => 'voluntary', 'engagement_terms' => null]);
         Auth::logout();
 
         return $match->expertProfile;
@@ -262,11 +318,15 @@ class DemoSeeder extends Seeder
         $case->refresh();
         $actor = $expert?->user ?? $reviewer;
         Auth::login($actor);
-        app(RecordOutcome::class)->handle($case, $actor, ['outcome' => $outcome, 'reason' => $summary, 'result_summary' => $summary]);
-        app(CloseCase::class)->handle($case->fresh(), $actor);
+        $recorded = app(RecordOutcome::class)->handle($case, $actor, ['outcome' => $outcome, 'reason' => $summary, 'result_summary' => $summary]);
         Auth::login($case->business->owner);
+        if ($recorded->confirmation_status === 'pending') {
+            app(ConfirmOutcome::class)->confirm($recorded, $case->business->owner);
+        }
+        app(CloseCase::class)->handle($case->fresh(), $case->business->owner);
         app(SubmitSatisfaction::class)->handle($case->fresh(), $case->business->owner, [
-            'rating' => $rating, 'comment' => $summary, 'problem_solved' => $outcome !== 'effective_action_started', 'would_recommend_expert' => true,
+            'rating' => $rating, 'comment' => $summary, 'problem_solved' => $outcome !== 'effective_action_started', 'would_recommend_expert' => $rating > 3,
+            'dissatisfaction_reason' => $rating <= 3 ? 'problem_not_solved' : null,
         ]);
         Auth::logout();
 

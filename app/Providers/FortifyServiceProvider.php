@@ -6,6 +6,8 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Domain\Business\Models\BusinessInvitation;
+use App\Domain\Business\Models\Partner;
 use App\Http\Responses\LoginResponse;
 use App\Http\Responses\LogoutResponse;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -38,7 +40,17 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
         Fortify::loginView(fn () => Inertia::render('Auth/Login', ['status' => session('status')]));
-        Fortify::registerView(fn (Request $request) => Inertia::render('Auth/Register', ['type' => $request->query('type', 'business')]));
+        Fortify::registerView(function (Request $request) {
+            $invitation = $request->query('invitation') ? BusinessInvitation::findByToken($request->query('invitation')) : null;
+            $ref = $request->query('ref', $request->session()->get('referral'));
+            $partner = $ref ? Partner::where('referral_code', strtoupper($ref))->where('is_active', true)->first() : null;
+
+            return Inertia::render('Auth/Register', [
+                'type' => $request->query('type', 'business'),
+                'referral' => $partner ? ['code' => $partner->referral_code, 'name' => $partner->translate('name')] : null,
+                'invitation' => $invitation?->isPending() ? ['token' => $request->query('invitation'), 'email' => $invitation->email, 'business' => $invitation->business->trade_name] : null,
+            ]);
+        });
         Fortify::requestPasswordResetLinkView(fn () => Inertia::render('Auth/ForgotPassword', ['status' => session('status')]));
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('Auth/ResetPassword', ['token' => $request->route('token'), 'email' => $request->query('email')]));
         Fortify::verifyEmailView(fn () => Inertia::render('Auth/VerifyEmail', ['status' => session('status')]));

@@ -10,6 +10,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Public;
 use App\Http\Controllers\Review;
 use App\Http\Controllers\Settings\SettingsController;
+use App\Http\Controllers\Support\SupportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,9 @@ Route::prefix('{locale}')->where(['locale' => 'fa|en'])->middleware('locale')->g
     Route::get('knowledge', [Public\KnowledgeController::class, 'index'])->name('knowledge.index');
     Route::get('knowledge/{article:slug}', [Public\KnowledgeController::class, 'show'])->name('knowledge.show');
     Route::get('experts', Public\ExpertDirectoryController::class)->name('experts.directory');
+
+    // ── Team invitation landing (guests are asked to sign in / register) ─
+    Route::get('invitations/{token}', [Business\InvitationController::class, 'show'])->where('token', '[A-Za-z0-9]{48}')->name('invitations.show');
 
     // ── Passwordless sign-in (email OTP) ────────────────────────────────
     Route::middleware('guest')->group(function () {
@@ -52,7 +56,15 @@ Route::prefix('{locale}')->where(['locale' => 'fa|en'])->middleware('locale')->g
             Route::put('notifications', [SettingsController::class, 'updateNotifications'])->name('notifications.update');
             Route::get('privacy', [SettingsController::class, 'privacy'])->name('privacy');
             Route::post('privacy', [SettingsController::class, 'updatePrivacy'])->name('privacy.update');
+            Route::post('data', [SettingsController::class, 'requestData'])->middleware('throttle:6,60')->name('data.request');
+            Route::get('data/{dataRequest}/download', [SettingsController::class, 'downloadData'])->middleware('signed')->name('data.download');
         });
+
+        Route::post('invitations/{token}', [Business\InvitationController::class, 'accept'])->where('token', '[A-Za-z0-9]{48}')->name('invitations.accept');
+
+        // ── Support & complaints (all users) ────────────────────────────
+        Route::get('support', [SupportController::class, 'index'])->name('support.index');
+        Route::post('support', [SupportController::class, 'store'])->middleware('throttle:10,60')->name('support.store');
 
         // ── Business panel ───────────────────────────────────────────────
         Route::middleware('role:business')->group(function () {
@@ -66,6 +78,11 @@ Route::prefix('{locale}')->where(['locale' => 'fa|en'])->middleware('locale')->g
                 Route::put('business/profile', [Business\BusinessProfileController::class, 'update'])->name('business.profile.update');
                 Route::post('business/documents', [Business\BusinessProfileController::class, 'uploadDocument'])->middleware('throttle:uploads')->name('business.documents.store');
                 Route::delete('business/documents/{document}', [Business\BusinessProfileController::class, 'destroyDocument'])->name('business.documents.destroy');
+                Route::get('business/team', [Business\TeamController::class, 'index'])->name('business.team.index');
+                Route::post('business/team', [Business\TeamController::class, 'invite'])->middleware('throttle:20,60')->name('business.team.invite');
+                Route::put('business/team/{member}', [Business\TeamController::class, 'update'])->name('business.team.update');
+                Route::delete('business/team/{member}', [Business\TeamController::class, 'destroy'])->name('business.team.destroy');
+                Route::delete('business/invitations/{invitation}', [Business\TeamController::class, 'revoke'])->name('business.team.revoke');
 
                 Route::get('cases', [Cases\CaseController::class, 'index'])->name('cases.index');
                 Route::get('cases/new', [Cases\CaseController::class, 'create'])->name('cases.create');
@@ -74,6 +91,8 @@ Route::prefix('{locale}')->where(['locale' => 'fa|en'])->middleware('locale')->g
                 Route::post('cases/{case}/submit', [Cases\IntakeController::class, 'submit'])->middleware('throttle:ai')->name('cases.submit');
                 Route::post('cases/{case}/matches/{match}', [Cases\MatchController::class, 'decide'])->name('cases.matches.decide');
                 Route::post('cases/{case}/satisfaction', [Cases\OutcomeController::class, 'satisfaction'])->name('cases.satisfaction');
+                Route::post('cases/{case}/outcome/confirm', [Cases\CaseLifecycleController::class, 'confirmOutcome'])->name('cases.outcome.confirm');
+                Route::post('cases/{case}/reopen', [Cases\CaseLifecycleController::class, 'reopen'])->name('cases.reopen');
                 Route::get('cases/{case}', [Cases\CaseController::class, 'show'])->name('cases.show');
             });
         });
@@ -92,6 +111,10 @@ Route::prefix('{locale}')->where(['locale' => 'fa|en'])->middleware('locale')->g
             Route::get('messages', [Cases\MessageController::class, 'since'])->name('messages.since');
             Route::post('outcome', [Cases\OutcomeController::class, 'store'])->name('outcome.store');
             Route::post('close', [Cases\OutcomeController::class, 'close'])->name('close');
+            Route::patch('details', [Cases\CaseLifecycleController::class, 'updateDetails'])->name('details.update');
+            Route::post('collaboration', [Cases\CaseLifecycleController::class, 'requestCollaboration'])->name('collaboration.store');
+            Route::post('leave', [Cases\CaseLifecycleController::class, 'leave'])->name('leave');
+            Route::post('experts/{expert}/release', [Cases\CaseLifecycleController::class, 'releaseExpert'])->name('experts.release');
         });
 
         // ── Expert / supporter panel ─────────────────────────────────────
@@ -164,6 +187,39 @@ Route::prefix('{locale}')->where(['locale' => 'fa|en'])->middleware('locale')->g
                 Route::get('knowledge/{article:id}/edit', [Admin\KnowledgeAdminController::class, 'edit'])->name('knowledge.edit');
                 Route::put('knowledge/{article:id}', [Admin\KnowledgeAdminController::class, 'update'])->name('knowledge.update');
                 Route::post('knowledge/{article:id}/status', [Admin\KnowledgeAdminController::class, 'status'])->name('knowledge.status');
+            });
+
+            Route::middleware('permission:pilot.manage|reports.view')->group(function () {
+                Route::get('pilot', [Admin\PilotController::class, 'show'])->name('pilot.show');
+                Route::put('pilot', [Admin\PilotController::class, 'update'])->middleware('permission:pilot.manage')->name('pilot.update');
+                Route::post('pilot/gates/{gate}', [Admin\PilotController::class, 'decide'])->middleware('permission:pilot.manage')->name('pilot.gates.decide');
+                Route::post('pilot/reports', [Admin\PilotController::class, 'generateReport'])->name('pilot.reports.generate');
+                Route::get('pilot/reports/{report}', [Admin\PilotController::class, 'report'])->name('pilot.reports.show');
+                Route::put('pilot/reports/{report}', [Admin\PilotController::class, 'notes'])->name('pilot.reports.notes');
+                Route::get('pilot/reports/{report}/export', [Admin\PilotController::class, 'export'])->name('pilot.reports.export');
+                Route::post('businesses/{business}/eligibility', [Admin\PilotController::class, 'eligibility'])->middleware('permission:pilot.manage')->name('businesses.eligibility');
+            });
+
+            Route::middleware('permission:partners.manage')->group(function () {
+                Route::get('partners', [Admin\PartnerController::class, 'index'])->name('partners.index');
+                Route::post('partners', [Admin\PartnerController::class, 'store'])->name('partners.store');
+                Route::put('partners/{partner}', [Admin\PartnerController::class, 'update'])->name('partners.update');
+            });
+
+            Route::middleware('permission:knowledge.manage')->group(function () {
+                Route::get('knowledge-taxonomy', [Admin\KnowledgeTaxonomyController::class, 'index'])->name('taxonomy.index');
+                Route::post('knowledge-taxonomy/categories', [Admin\KnowledgeTaxonomyController::class, 'storeCategory'])->name('taxonomy.categories.store');
+                Route::put('knowledge-taxonomy/categories/{category}', [Admin\KnowledgeTaxonomyController::class, 'updateCategory'])->name('taxonomy.categories.update');
+                Route::post('knowledge-taxonomy/sources', [Admin\KnowledgeTaxonomyController::class, 'storeSource'])->name('taxonomy.sources.store');
+                Route::put('knowledge-taxonomy/sources/{source}', [Admin\KnowledgeTaxonomyController::class, 'updateSource'])->name('taxonomy.sources.update');
+            });
+
+            Route::middleware('permission:legal.review|data_requests.manage|complaints.manage')->group(function () {
+                Route::get('compliance', [Admin\ComplianceController::class, 'index'])->name('compliance.index');
+                Route::post('compliance/requests/{collaboration}', [Admin\ComplianceController::class, 'decideRequest'])->name('compliance.requests.decide');
+                Route::put('compliance/paths/{path}', [Admin\ComplianceController::class, 'updatePath'])->name('compliance.paths.update');
+                Route::post('compliance/data-requests/{dataRequest}', [Admin\ComplianceController::class, 'decideDataRequest'])->name('compliance.data.decide');
+                Route::put('compliance/complaints/{complaint}', [Admin\ComplianceController::class, 'updateComplaint'])->name('compliance.complaints.update');
             });
 
             Route::get('audit', Admin\AuditLogController::class)->middleware('permission:audit.view')->name('audit.index');

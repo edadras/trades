@@ -54,7 +54,16 @@ class CasePresenter
 
         $events = $case->events()->with('user:id,name')->when(! $canInternal, fn ($q) => $q->where('visibility', 'team'))->limit(100)->get();
         $notes = $case->notes()->with('user:id,name')->when(! $canInternal, fn ($q) => $q->where('visibility', 'team'))->get();
-        $relation = $case->business->hasMember($viewer) ? 'owner' : ($isStaff ? 'staff' : 'case_team');
+        $gate = Gate::forUser($viewer);
+        $isBusiness = $case->business->hasMember($viewer);
+        $confidential = $gate->allows('viewConfidential', $case);
+        $relation = match (true) {
+            $isBusiness => 'owner',
+            $isStaff => 'staff',
+            $confidential => 'case_team',
+            default => 'verified_expert',
+        };
+        $outcome = $case->outcome;
 
         $conversation = $case->conversation;
         $messages = $conversation && $conversation->hasMember($viewer)
@@ -64,6 +73,15 @@ class CasePresenter
         return $this->card($case) + [
             'context' => $context,
             'description' => $case->description,
+            'actions_taken' => $case->actions_taken,
+            'data_consent' => [
+                'ai_processing' => $case->consents('ai_processing'),
+                'share_with_foreign_experts' => $case->consents('share_with_foreign_experts'),
+                'anonymized_learning' => $case->consents('anonymized_learning'),
+            ],
+            'is_priority' => $case->is_priority,
+            'referral' => ['source' => $case->referral_source, 'partner' => $case->partner?->translate('name')],
+            'confidential_access' => $confidential,
             'voice' => [
                 'has_voice' => (bool) $case->voice_path,
                 'transcript' => $case->voice_transcript,
@@ -94,7 +112,8 @@ class CasePresenter
                 'provider' => $isStaff ? $analysis->provider.' / '.$analysis->model : null,
                 'created_at' => $analysis->created_at->toIso8601String(),
             ] : null,
-            'documents' => $case->documents->map(fn ($d) => $d->fileSummary() + ['uploader' => $d->uploader?->name])->all(),
+            'documents' => $confidential ? $case->documents->map(fn ($d) => $d->fileSummary() + ['uploader' => $d->uploader?->name])->all() : [],
+            'collaboration_requests' => $case->collaborationRequests()->with(['servicePath', 'requester', 'reviewer'])->get()->map->toCard()->all(),
             'recommended_contents' => $case->recommendedContents->map(fn ($a) => $a->toCard() + ['relevance' => (float) $a->pivot->relevance])->all(),
             'matches' => $case->matches->filter(fn ($m) => $isStaff || $m->status !== MatchStatus::Withdrawn)->map(fn ($m) => [
                 'id' => $m->id,
@@ -103,9 +122,17 @@ class CasePresenter
                 'source' => $m->source,
                 'reasons' => $m->localizedReasons(),
                 'breakdown' => $m->breakdown,
-                'expert' => $m->expertProfile->toCard(),
+                'expert' => $m->expertProfile->toCard($isStaff ? 'staff' : 'public'),
+                'engagement_model' => $m->engagement_model,
             ])->values()->all(),
-            'experts' => $case->activeExperts->map(fn ($e) => $e->toCard() + ['role' => $e->pivot->role, 'joined_at' => $e->pivot->joined_at])->all(),
+            'experts' => $case->caseExperts()->with('expertProfile.user', 'expertProfile.languages', 'expertProfile.categories')->where('status', 'active')->get()
+                ->map(fn ($ce) => $ce->expertProfile->toCard($isStaff ? 'staff' : 'case_team') + [
+                    'role' => $ce->role, 'joined_at' => $ce->joined_at?->toIso8601String(),
+                    'engagement_model' => $ce->engagement_model, 'engagement_terms' => $ce->engagement_terms,
+                    'is_me' => $ce->expertProfile->user_id === $viewer->id,
+                ])->all(),
+            'past_experts' => $case->caseExperts()->with('expertProfile.user')->whereIn('status', ['left', 'removed'])->get()
+                ->map(fn ($ce) => ['name' => $ce->expertProfile->user?->name, 'status' => $ce->status, 'reason' => $ce->leave_reason, 'left_at' => $ce->left_at?->toIso8601String()])->all(),
             'case_manager' => $case->caseManager?->only(['id', 'name']),
             'tasks' => $case->tasks->sortBy(fn ($t) => sprintf('%d-%015d', in_array($t->status->value, ['done', 'cancelled'], true) ? 1 : 0, $t->due_at?->timestamp ?? 999999999999))->map->toCard()->values()->all(),
             'appointments' => $case->appointments->map->toCard()->all(),
@@ -116,11 +143,17 @@ class CasePresenter
                 'messages' => $messages->all(),
                 'members' => $conversation->users()->get()->map(fn ($u) => ['id' => $u->id, 'name' => $u->name, 'role' => $u->pivot->role, 'last_read_message_id' => $u->pivot->last_read_message_id])->all(),
             ] : null,
-            'outcome' => $case->outcome ? [
-                'outcome' => $case->outcome->outcome->value, 'reason' => $case->outcome->reason, 'result_summary' => $case->outcome->result_summary,
-                'recorded_by' => $case->outcome->recorder?->name, 'created_at' => $case->outcome->created_at->toIso8601String(),
+            'outcome' => $outcome ? [
+                'outcome' => $outcome->outcome->value, 'reason' => $outcome->reason, 'result_summary' => $outcome->result_summary,
+                'recorded_by' => $outcome->recorder?->name, 'created_at' => $outcome->created_at->toIso8601String(),
+                'confirmation_status' => $outcome->confirmation_status, 'confirmed_by' => $outcome->confirmer?->name,
+                'confirmed_at' => $outcome->confirmed_at?->toIso8601String(), 'dispute_reason' => $outcome->dispute_reason,
+                'auto_confirm_on' => $outcome->confirmation_status === 'pending' ? $outcome->created_at->copy()->addDays(config('platform.outcome_confirmation_days'))->toIso8601String() : null,
             ] : null,
-            'survey' => $case->surveys()->where('user_id', $viewer->id)->first()?->only(['rating', 'comment', 'problem_solved', 'would_recommend_expert']),
+            'outcome_history' => $case->outcomes()->whereNotNull('superseded_at')->with('recorder:id,name')->get()->map(fn ($o) => [
+                'outcome' => $o->outcome->value, 'reason' => $o->reason, 'status' => $o->confirmation_status, 'recorded_by' => $o->recorder?->name, 'created_at' => $o->created_at->toIso8601String(),
+            ])->all(),
+            'survey' => $case->surveys()->where('user_id', $viewer->id)->first()?->only(['rating', 'comment', 'dissatisfaction_reason', 'problem_solved', 'would_recommend_expert']),
             'reviews' => $isStaff ? $case->reviews()->with(['reviewer:id,name', 'aiCategory', 'finalCategory'])->get()->map(fn ($r) => [
                 'id' => $r->id, 'status' => $r->status, 'reason' => $r->reason, 'decision' => $r->decision, 'reviewer' => $r->reviewer?->name,
                 'ai_category' => $r->aiCategory?->translate('name'), 'final_category' => $r->finalCategory?->translate('name'),
@@ -131,9 +164,15 @@ class CasePresenter
             'stepper' => $this->stepper($case),
             'can' => [
                 'participate' => Gate::forUser($viewer)->allows('participate', $case),
-                'decide_matches' => Gate::forUser($viewer)->allows('decideMatches', $case) && $case->status === CaseStatus::ExpertProposed,
+                'decide_matches' => $gate->allows('decideMatches', $case) && in_array($case->status, [CaseStatus::ExpertProposed, CaseStatus::Accepted, CaseStatus::InProgress, CaseStatus::Waiting], true),
+                'confirm_outcome' => $gate->allows('confirmOutcome', $case) && $outcome?->confirmation_status === 'pending',
+                'reopen' => $gate->allows('reopen', $case),
+                'request_collaboration' => $gate->allows('requestCollaboration', $case),
+                'leave' => $gate->allows('leave', $case),
+                'release_experts' => ! $case->isClosed() && ($isBusiness || $gate->allows('assign', $case)),
+                'edit_details' => $isBusiness && ! $case->isClosed(),
                 'record_outcome' => Gate::forUser($viewer)->allows('recordOutcome', $case),
-                'close' => Gate::forUser($viewer)->allows('close', $case) && $case->outcome !== null && $case->status->canTransitionTo(CaseStatus::Closed),
+                'close' => $gate->allows('close', $case) && $outcome?->confirmation_status === 'confirmed' && ($case->status->canTransitionTo(CaseStatus::Closed) || in_array($case->status, [CaseStatus::InProgress, CaseStatus::Waiting], true)),
                 'rate' => Gate::forUser($viewer)->allows('rate', $case),
                 'review' => Gate::forUser($viewer)->allows('review', $case),
                 'assign' => Gate::forUser($viewer)->allows('assign', $case),

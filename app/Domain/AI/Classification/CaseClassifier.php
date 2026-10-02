@@ -9,6 +9,7 @@ use App\Domain\AI\Safety\PiiRedactor;
 use App\Domain\AI\Support\TextNormalizer;
 use App\Domain\Cases\Enums\Urgency;
 use App\Domain\Cases\Models\CaseCategory;
+use App\Domain\Pilot\Models\AiIncident;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -23,15 +24,16 @@ class CaseClassifier
 
     public function __construct(private readonly AIManager $ai, private readonly PiiRedactor $redactor) {}
 
-    public function classify(string $text, ?string $industry = null): Classification
+    public function classify(string $text, ?string $industry = null, bool $allowModel = true): Classification
     {
         $categories = CaseCategory::query()->where('is_active', true)->get();
 
-        if ($this->ai->usesLanguageModel()) {
+        if ($allowModel && $this->ai->usesLanguageModel()) {
             try {
                 return $this->classifyWithModel($text, $categories);
             } catch (AIProviderException $e) {
                 Log::warning('AI classification fell back to heuristics', ['error' => $e->getMessage()]);
+                AiIncident::record($this->ai->provider()->name(), 'classification', $e->getMessage());
             }
         }
 

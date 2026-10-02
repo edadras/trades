@@ -14,10 +14,12 @@ class DatabaseSeeder extends Seeder
             TaxonomySeeder::class,
             KnowledgeSeeder::class,
             KpiSeeder::class,
+            ServicePathSeeder::class,
+            PilotProgramSeeder::class,
         ]);
 
         if (! app()->isProduction() || env('SEED_DEMO', false)) {
-            $this->call(DemoSeeder::class);
+            $this->call([PartnerSeeder::class, DemoSeeder::class]);
         }
     }
 }

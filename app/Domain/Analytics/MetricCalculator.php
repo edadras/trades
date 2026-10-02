@@ -25,6 +25,11 @@ class MetricCalculator
         return [
             'active_businesses' => 'count',
             'verified_supporters' => 'count',
+            'verified_supporters_domestic' => 'count',
+            'verified_supporters_abroad' => 'count',
+            'initial_review_sla_rate' => 'percent',
+            'dissatisfaction_rate' => 'percent',
+            'outcome_confirmation_rate' => 'percent',
             'real_cases' => 'count',
             'initial_review_hours' => 'hours',
             'ai_agreement_rate' => 'percent',
@@ -42,6 +47,11 @@ class MetricCalculator
         return match ($metric) {
             'active_businesses' => (float) Business::whereNotNull('onboarding_completed_at')->count(),
             'verified_supporters' => (float) ExpertProfile::verified()->count(),
+            'verified_supporters_domestic' => (float) ExpertProfile::verified()->where('country', 'IR')->count(),
+            'verified_supporters_abroad' => (float) ExpertProfile::verified()->where('country', '!=', 'IR')->count(),
+            'initial_review_sla_rate' => $this->initialReviewSlaRate(),
+            'dissatisfaction_rate' => ($n = SatisfactionSurvey::count()) ? round(SatisfactionSurvey::where('rating', '<=', 3)->count() / $n * 100, 1) : null,
+            'outcome_confirmation_rate' => ($n = CaseOutcome::whereNull('superseded_at')->count()) ? round(CaseOutcome::whereNull('superseded_at')->where('confirmation_status', 'confirmed')->count() / $n * 100, 1) : null,
             'real_cases' => (float) SupportCase::real()->count(),
             'initial_review_hours' => $this->initialReviewHours(),
             'ai_agreement_rate' => $this->aiAgreementRate(),
@@ -72,6 +82,30 @@ class MetricCalculator
         }), 1);
     }
 
+    /**
+     * Share of cases whose first decision came within the SLA (48h). Cases still undecided count as
+     * breaches once the SLA has passed; cases still inside the window are not counted yet.
+     */
+    public function initialReviewSlaRate(): ?float
+    {
+        $sla = (int) config('platform.initial_review_sla_hours');
+        $cases = SupportCase::real()->whereNotNull('submitted_at')->get(['submitted_at', 'first_reviewed_at', 'ready_at']);
+        $counted = 0;
+        $within = 0;
+        foreach ($cases as $c) {
+            $decided = collect([$c->first_reviewed_at, $c->ready_at])->filter()->min();
+            if (! $decided && $c->submitted_at->diffInHours(now()) < $sla) {
+                continue;
+            }
+            $counted++;
+            if ($decided && $c->submitted_at->diffInMinutes($decided) <= $sla * 60) {
+                $within++;
+            }
+        }
+
+        return $counted ? round($within / $counted * 100, 1) : null;
+    }
+
     public function aiAgreementRate(): ?float
     {
         $reviews = AiHumanReview::where('status', 'completed')->whereNotNull('category_agreed');
@@ -82,7 +116,7 @@ class MetricCalculator
 
     public function clearNextActionRate(): ?float
     {
-        $analysed = SupportCase::real()->whereHas('analyses');
+        $analysed = SupportCase::real()->whereNotNull('accepted_at');
         $total = (clone $analysed)->count();
         if (! $total) {
             return null;
@@ -106,9 +140,10 @@ class MetricCalculator
     /** @param array<int, OutcomeType> $types */
     public function outcomeRate(array $types): ?float
     {
-        $total = CaseOutcome::count();
+        $current = CaseOutcome::whereNull('superseded_at')->where('confirmation_status', 'confirmed');
+        $total = (clone $current)->count();
 
-        return $total ? round(CaseOutcome::whereIn('outcome', array_map(fn ($t) => $t->value, $types))->count() / $total * 100, 1) : null;
+        return $total ? round((clone $current)->whereIn('outcome', array_map(fn ($t) => $t->value, $types))->count() / $total * 100, 1) : null;
     }
 
     public function expertResponseHours(): ?float

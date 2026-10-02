@@ -13,6 +13,7 @@ use App\Domain\Cases\Enums\VerificationState;
 use App\Domain\Cases\Models\SupportCase;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Matching\Actions\RunMatching;
+use App\Domain\Pilot\Models\PilotProgram;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -32,8 +33,21 @@ class AnalyzeCase
         private readonly CaseNotifier $notifier,
     ) {}
 
-    public function handle(SupportCase $case): AiAnalysis
+    public function handle(SupportCase $case): ?AiAnalysis
     {
+        // The business declined AI processing for this case: a case expert classifies it by hand.
+        if (! $case->consents('ai_processing')) {
+            if (! $case->reviews()->where('status', 'pending')->exists()) {
+                AiHumanReview::create(['case_id' => $case->id, 'reason' => 'no_ai_consent']);
+            }
+            if ($case->status->canTransitionTo(CaseStatus::HumanReview)) {
+                $this->transition->handle($case, CaseStatus::HumanReview, 'no_ai_consent', null);
+            }
+            $this->notifyReviewers($case);
+
+            return null;
+        }
+
         if ($case->status === CaseStatus::Submitted) {
             $this->transition->handle($case, CaseStatus::AiProcessing, null, null);
         }
@@ -87,6 +101,7 @@ class AnalyzeCase
                 'summary' => $result->summary,
                 'is_sensitive' => $case->is_sensitive || $result->isSensitive,
                 'needs_expert' => $result->needsExpert,
+                'is_priority' => $this->isPriority($case, $c->category?->id, $c->subcategory?->id),
             ])->save();
 
             $case->recommendedContents()->syncWithoutDetaching(collect($result->recommendedContents)->mapWithKeys(fn ($r) => [$r['id'] => ['relevance' => $r['score'], 'source' => 'ai']])->all());
@@ -130,6 +145,14 @@ class AnalyzeCase
         }
 
         return $analysis;
+    }
+
+    /** Cases in the active pilot's priority problems get deep handling and jump the review queue. */
+    private function isPriority(SupportCase $case, ?int $categoryId, ?int $subcategoryId): bool
+    {
+        $ids = $case->business->pilotProgram?->priority_category_ids ?? PilotProgram::active()?->priority_category_ids ?? [];
+
+        return (bool) array_intersect(array_map('intval', $ids), array_filter([$categoryId, $subcategoryId]));
     }
 
     private function notifyReviewers(SupportCase $case): void

@@ -4,6 +4,7 @@ namespace App\Domain\Experts\Actions;
 
 use App\Domain\Experts\Enums\ExpertVerificationStatus;
 use App\Domain\Experts\Models\ExpertProfile;
+use App\Models\PrivacySetting;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -14,6 +15,10 @@ class SaveExpertProfile
     public static function rules(): array
     {
         return [
+            'supporter_type' => ['required', Rule::in(ExpertProfile::SUPPORTER_TYPES)],
+            'organization_name' => ['required_if:supporter_type,organization', 'nullable', 'string', 'max:160'],
+            'support_models' => ['required', 'array', 'min:1'], 'support_models.*' => [Rule::in(ExpertProfile::SUPPORT_MODELS)],
+            'privacy' => ['array'], 'privacy.*' => [Rule::in(PrivacySetting::LEVELS)],
             'headline' => ['required', 'string', 'max:160'],
             'bio' => ['required', 'string', 'max:4000'],
             'country' => ['required', Rule::in(config('platform.countries'))],
@@ -40,7 +45,7 @@ class SaveExpertProfile
     {
         return DB::transaction(function () use ($user, $data) {
             $profile = ExpertProfile::firstOrNew(['user_id' => $user->id]);
-            $profile->fill(collect($data)->except(['skills', 'languages', 'availability'])->all());
+            $profile->fill(collect($data)->except(['skills', 'languages', 'availability', 'privacy'])->all());
             if (! $profile->exists) {
                 $profile->verification_status = ExpertVerificationStatus::Draft;
             }
@@ -57,6 +62,10 @@ class SaveExpertProfile
             $profile->availability()->delete();
             foreach ($data['availability'] ?? [] as $slot) {
                 $profile->availability()->create($slot);
+            }
+
+            if (! empty($data['privacy'])) {
+                $profile->syncPrivacy($data['privacy']);
             }
 
             return $profile->fresh(['skills', 'languages', 'availability']);

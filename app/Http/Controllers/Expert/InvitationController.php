@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Expert;
 
 use App\Domain\AI\Safety\PiiRedactor;
+use App\Domain\Experts\Models\ExpertProfile;
 use App\Domain\Matching\Actions\RespondToInvitation;
 use App\Domain\Matching\Enums\MatchStatus;
 use App\Domain\Matching\Models\ExpertMatch;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,6 +35,10 @@ class InvitationController extends Controller
                 'score' => $m->score,
                 'reasons' => $m->localizedReasons(),
                 'invited_at' => $m->business_decided_at?->toIso8601String(),
+                'engagement_model' => $m->engagement_model,
+                'support_models' => $m->expertProfile->support_models ?? [],
+                'foreign' => $m->expertProfile->isForeignTo($m->case->business->country),
+                'sensitive' => $m->case->is_sensitive,
                 'case' => [
                     'number' => $m->case->number,
                     'category' => $m->case->category?->translate('name'),
@@ -50,8 +56,16 @@ class InvitationController extends Controller
     public function respond(Request $request, ExpertMatch $match, RespondToInvitation $action): RedirectResponse
     {
         abort_unless($match->expertProfile->user_id === $request->user()->id, 403);
-        $data = $request->validate(['accept' => ['required', 'boolean'], 'reason' => ['nullable', 'string', 'max:500']]);
-        $action->handle($match, $request->user(), $data['accept'], $data['reason'] ?? null);
+        $data = $request->validate([
+            'accept' => ['required', 'boolean'],
+            'reason' => ['nullable', 'string', 'max:500'],
+            'engagement_model' => ['required_if:accept,true', 'nullable', Rule::in(ExpertProfile::SUPPORT_MODELS)],
+            'engagement_terms' => ['nullable', 'string', 'max:2000'],
+        ]);
+        $action->handle($match, $request->user(), $data['accept'], $data['reason'] ?? null, [
+            'engagement_model' => $data['engagement_model'] ?? null,
+            'engagement_terms' => $data['engagement_terms'] ?? null,
+        ]);
 
         return $data['accept']
             ? redirect()->route('expert.cases.show', $match->case->number)->with('success', __('app.saved'))

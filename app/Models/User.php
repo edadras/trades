@@ -102,6 +102,8 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             $this->isStaff() && $this->can('cases.review') => 'review.index',
             $this->isStaff() && $this->can('knowledge.manage') => 'admin.knowledge.index',
             $this->isStaff() && $this->can('audit.view') => 'admin.audit.index',
+            $this->isStaff() && $this->can('experts.view') => 'admin.experts.index',
+            $this->isStaff() && $this->can('legal.review') => 'admin.compliance.index',
             $this->hasRole(Role::Supporter->value) => 'expert.dashboard',
             $this->hasRole(Role::Business->value) => $this->currentBusiness()?->isOnboarded() ? 'dashboard' : 'onboarding.show',
             default => 'expert.profile.edit',

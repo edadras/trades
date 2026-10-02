@@ -4,9 +4,14 @@ namespace App\Domain\Analytics;
 
 use App\Domain\AI\Models\AiHumanReview;
 use App\Domain\Business\Models\Business;
+use App\Domain\Business\Models\Partner;
 use App\Domain\Cases\Enums\OutcomeType;
 use App\Domain\Cases\Models\CaseCategory;
+use App\Domain\Cases\Models\CaseOutcome;
+use App\Domain\Cases\Models\SatisfactionSurvey;
 use App\Domain\Cases\Models\SupportCase;
+use App\Domain\Compliance\Models\CollaborationRequest;
+use App\Domain\Compliance\Models\Complaint;
 use App\Domain\Experts\Models\ExpertProfile;
 use Illuminate\Support\Facades\DB;
 
@@ -22,6 +27,10 @@ class DashboardReport
             'cases' => SupportCase::real()->count(),
             'open_cases' => SupportCase::open()->count(),
             'experts' => ExpertProfile::verified()->count(),
+            'experts_abroad' => ExpertProfile::verified()->where('country', '!=', 'IR')->count(),
+            'pending_outcomes' => CaseOutcome::whereNull('superseded_at')->where('confirmation_status', 'pending')->count(),
+            'legal_queue' => CollaborationRequest::pending()->count(),
+            'open_complaints' => Complaint::open()->count(),
             'pending_experts' => ExpertProfile::whereIn('verification_status', ['submitted', 'in_review'])->count(),
             'review_queue' => AiHumanReview::pending()->count(),
             'ai_accuracy' => $this->metrics->aiAgreementRate(),
@@ -71,6 +80,22 @@ class DashboardReport
         ];
     }
 
+    /** Where cases come from: self-service vs partner referrals. */
+    public function casesBySource(): array
+    {
+        $partners = Partner::all()->keyBy('id');
+
+        return SupportCase::real()->selectRaw('partner_id, count(*) as c')->groupBy('partner_id')->get()
+            ->map(fn ($r) => ['key' => $r->partner_id ?? 'self', 'label' => $r->partner_id ? ($partners[$r->partner_id]?->translate('name') ?? '—') : __('reports.self_referral'), 'value' => (int) $r->c])
+            ->sortByDesc('value')->values()->all();
+    }
+
+    public function dissatisfactionReasons(): array
+    {
+        return SatisfactionSurvey::whereNotNull('dissatisfaction_reason')->selectRaw('dissatisfaction_reason as r, count(*) as c')->groupBy('r')->get()
+            ->map(fn ($row) => ['key' => $row->r, 'label' => __('reports.dissatisfaction.'.$row->r), 'value' => (int) $row->c])->all();
+    }
+
     public function funnel(): array
     {
         return $this->metrics->funnel();
@@ -81,7 +106,7 @@ class DashboardReport
         $rows = DB::table('case_experts')
             ->join('expert_profiles', 'expert_profiles.id', '=', 'case_experts.expert_profile_id')
             ->join('users', 'users.id', '=', 'expert_profiles.user_id')
-            ->leftJoin('case_outcomes', 'case_outcomes.case_id', '=', 'case_experts.case_id')
+            ->leftJoin('case_outcomes', fn ($j) => $j->on('case_outcomes.case_id', '=', 'case_experts.case_id')->whereNull('case_outcomes.superseded_at'))
             ->leftJoin('satisfaction_surveys', 'satisfaction_surveys.case_id', '=', 'case_experts.case_id')
             ->groupBy('expert_profiles.id', 'users.name', 'expert_profiles.avg_response_minutes')
             ->selectRaw("expert_profiles.id, users.name, expert_profiles.avg_response_minutes,

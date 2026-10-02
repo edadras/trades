@@ -6,9 +6,11 @@ use App\Domain\AI\Models\AiAnalysis;
 use App\Domain\AI\Models\AiHumanReview;
 use App\Domain\AI\Models\AiSession;
 use App\Domain\Business\Models\Business;
+use App\Domain\Business\Models\Partner;
 use App\Domain\Cases\Enums\CaseStatus;
 use App\Domain\Cases\Enums\Urgency;
 use App\Domain\Cases\Enums\VerificationState;
+use App\Domain\Compliance\Models\CollaborationRequest;
 use App\Domain\Experts\Models\ExpertProfile;
 use App\Domain\Knowledge\Models\KnowledgeArticle;
 use App\Domain\Matching\Models\ExpertMatch;
@@ -36,7 +38,7 @@ class SupportCase extends Model
     protected $table = 'cases';
 
     protected $fillable = [
-        'number', 'business_id', 'created_by', 'case_manager_id', 'title', 'description', 'input_mode', 'voice_path',
+        'number', 'business_id', 'partner_id', 'referral_source', 'actions_taken', 'data_consent', 'is_priority', 'created_by', 'case_manager_id', 'title', 'description', 'input_mode', 'voice_path',
         'voice_transcript', 'locale', 'category_id', 'subcategory_id', 'urgency', 'confidence', 'classification_source',
         'summary', 'is_sensitive', 'needs_expert', 'status', 'next_action', 'next_action_owner', 'next_action_due_at',
         'submitted_at', 'first_reviewed_at', 'ready_at', 'accepted_at', 'resolved_at', 'closed_at',
@@ -49,6 +51,9 @@ class SupportCase extends Model
             'urgency' => Urgency::class,
             'classification_source' => VerificationState::class,
             'description' => 'encrypted',
+            'actions_taken' => 'encrypted',
+            'data_consent' => 'array',
+            'is_priority' => 'boolean',
             'voice_transcript' => 'encrypted',
             'summary' => 'encrypted',
             'confidence' => 'float',
@@ -151,9 +156,39 @@ class SupportCase extends Model
         return $this->hasMany(CaseEvent::class, 'case_id')->latest('id');
     }
 
+    /** The current (not superseded) outcome. */
     public function outcome(): HasOne
     {
-        return $this->hasOne(CaseOutcome::class, 'case_id');
+        return $this->hasOne(CaseOutcome::class, 'case_id')->whereNull('superseded_at')->latestOfMany();
+    }
+
+    public function outcomes(): HasMany
+    {
+        return $this->hasMany(CaseOutcome::class, 'case_id')->latest('id');
+    }
+
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class);
+    }
+
+    public function collaborationRequests(): HasMany
+    {
+        return $this->hasMany(CollaborationRequest::class, 'case_id')->latest();
+    }
+
+    /** Per-case data-use choices made by the business when submitting. */
+    public function consents(string $key): bool
+    {
+        $defaults = ['ai_processing' => true, 'share_with_foreign_experts' => true, 'anonymized_learning' => false];
+
+        return (bool) (($this->data_consent ?? [])[$key] ?? $defaults[$key] ?? false);
+    }
+
+    /** Whether a confirmed outcome exists (required before closing). */
+    public function hasConfirmedOutcome(): bool
+    {
+        return $this->outcome()->where('confirmation_status', 'confirmed')->exists();
     }
 
     public function surveys(): HasMany

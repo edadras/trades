@@ -34,9 +34,9 @@ enum CaseStatus: string
             self::ExpertProposed => [self::Accepted, self::Matching, self::Closed],
             self::Accepted => [self::InProgress, self::Matching],
             self::InProgress => [self::Waiting, self::Resolved, self::Matching],
-            self::Waiting => [self::InProgress, self::HumanReview, self::Resolved, self::Closed],
-            self::Resolved => [self::Closed, self::InProgress],
-            self::Closed => [],
+            self::Waiting => [self::InProgress, self::HumanReview, self::Resolved, self::Closed, self::Matching],
+            self::Resolved => [self::Closed, self::InProgress, self::HumanReview],
+            self::Closed => [self::InProgress, self::HumanReview],
         };
     }
 

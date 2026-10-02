@@ -8,6 +8,7 @@ use App\Domain\Cases\Models\SupportCase;
 use App\Domain\Experts\Enums\ExpertVerificationStatus;
 use App\Domain\Matching\Models\ExpertMatch;
 use App\Models\User;
+use App\Support\HasPrivacySettings;
 use Database\Factories\ExpertProfileFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,12 +21,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ExpertProfile extends Model
 {
     /** @use HasFactory<ExpertProfileFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasPrivacySettings, SoftDeletes;
 
-    public const COLLABORATION_TYPES = ['consultation', 'project', 'mentoring', 'training', 'pro_bono'];
+    public const COLLABORATION_TYPES = ['consultation', 'project', 'mentoring', 'training', 'problem_review', 'introduction', 'pro_bono'];
+
+    /** How the supporter is compensated: voluntary, free, subsidised by the programme, or commercial. */
+    public const SUPPORT_MODELS = ['voluntary', 'free', 'subsidized', 'commercial'];
+
+    public const SUPPORTER_TYPES = ['individual', 'organization'];
 
     protected $fillable = [
-        'user_id', 'headline', 'bio', 'country', 'city', 'timezone', 'years_experience', 'industries',
+        'user_id', 'supporter_type', 'organization_name', 'support_models', 'headline', 'bio', 'country', 'city', 'timezone', 'years_experience', 'industries',
         'serves_countries', 'collaboration_types', 'certifications', 'linkedin_url', 'max_active_cases',
         'is_available', 'nda_accepted_at', 'nda_version', 'verification_status', 'verified_at', 'avg_response_minutes',
     ];
@@ -36,6 +42,7 @@ class ExpertProfile extends Model
             'industries' => 'array',
             'serves_countries' => 'array',
             'collaboration_types' => 'array',
+            'support_models' => 'array',
             'certifications' => 'array',
             'is_available' => 'boolean',
             'nda_accepted_at' => 'datetime',
@@ -47,6 +54,33 @@ class ExpertProfile extends Model
     protected static function newFactory(): ExpertProfileFactory
     {
         return ExpertProfileFactory::new();
+    }
+
+    public static function defaultPrivacy(): array
+    {
+        return [
+            'city' => 'public',
+            'linkedin_url' => 'case_team',
+            'certifications' => 'public',
+            'email' => 'case_team',
+            'phone' => 'private',
+        ];
+    }
+
+    /** Contact fields come from the user account but obey the expert's privacy choices. */
+    public function getEmailAttribute(): ?string
+    {
+        return $this->user?->email;
+    }
+
+    public function getPhoneAttribute(): ?string
+    {
+        return $this->user?->phone;
+    }
+
+    public function isForeignTo(?string $country): bool
+    {
+        return $country !== null && $this->country !== $country;
     }
 
     public function user(): BelongsTo
@@ -111,16 +145,29 @@ class ExpertProfile extends Model
     }
 
     /** Public card used in matching proposals and the public directory. */
-    public function toCard(): array
+    /**
+     * Public card used in matching proposals and the directory. $relation decides which
+     * privacy-controlled fields are included (public | verified_expert | case_team | owner | staff).
+     */
+    public function toCard(string $relation = 'public'): array
     {
+        $visible = $this->visibleSensitiveFields($relation);
+
         return [
             'id' => $this->id,
-            'name' => $this->user?->name,
+            'name' => $this->supporter_type === 'organization' && $this->organization_name ? $this->organization_name : $this->user?->name,
+            'contact_person' => $this->supporter_type === 'organization' ? $this->user?->name : null,
+            'supporter_type' => $this->supporter_type,
+            'support_models' => $this->support_models ?? [],
+            'city' => $visible['city'] ?? null,
+            'linkedin_url' => $visible['linkedin_url'] ?? null,
+            'certifications' => $visible['certifications'] ?? [],
+            'email' => $visible['email'] ?? null,
+            'phone' => $visible['phone'] ?? null,
             'avatar' => $this->user?->avatar_path,
             'headline' => $this->headline,
             'bio' => $this->bio,
             'country' => $this->country,
-            'city' => $this->city,
             'years_experience' => $this->years_experience,
             'industries' => $this->industries ?? [],
             'languages' => $this->languages->pluck('language')->all(),

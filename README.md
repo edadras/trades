@@ -46,6 +46,8 @@ Backing services for staging/production-like runs: `docker compose up -d` (MySQL
 | `applicant@hamyar.test` | Expert application waiting for verification |
 | `reviewer@hamyar.test` | Case expert (review queue) |
 | `content@hamyar.test` · `ops@hamyar.test` · `product@hamyar.test` · `legal@hamyar.test` | Content / operations / product / legal-compliance |
+| `lead@hamyar.test` · `network@hamyar.test` | Pilot programme lead / supporter network manager |
+| `team@hamyar.test` | Member of the Aria business team (invited by the owner) |
 | `admin@hamyar.test` · `superadmin@hamyar.test` | Admin / super admin |
 
 ## Architecture
@@ -84,6 +86,9 @@ resources/js/
 * Reviewer decisions record AI-vs-human agreement (`category_agreed`, `urgency_agreed`) for the AI accuracy KPI.
 * Provenance is stored and shown everywhere: `ai_suggested` / `expert_verified` / `human_approved`.
 * Closing without an outcome is rejected; "effective action started" is a separate outcome from "resolved".
+* An outcome recorded by a supporter must be **confirmed by the business** (or is auto-confirmed after `PLATFORM_OUTCOME_CONFIRMATION_DAYS`, `outcomes:auto-confirm`). A dispute opens a complaint; a new outcome supersedes the old one, and resolved/closed cases can be reopened (60-day window for businesses) with full outcome history.
+* Per-case **data-use consent**: AI processing (off → straight to human review), sharing with supporters abroad (off → domestic matching only), anonymised learning (needed for public success stories).
+* Case team changes: an expert can leave, staff can remove, the business can request a replacement; with no active expert the case returns to matching. Engagement model per expert (voluntary / free / subsidised / commercial) with terms.
 
 ### AI
 
@@ -96,20 +101,28 @@ resources/js/
 
 Encrypted-at-rest sensitive fields (Eloquent `encrypted` casts), private file storage with random names, 10-minute signed download URLs that also re-check authorisation, audit log for every sensitive view/download/login/role change, consent log, per-field privacy levels chosen by the business, anonymised invitations for experts, RBAC policies, admin 2FA enforcement, rate limiting (login, OTP, AI, uploads, messages), session/device management, ClamAV scanning (`FILE_SCANNER=clamav`), security headers/HSTS, soft deletes, `platform:backup` and `platform:prune-data` (retention policy in `config/platform.php`).
 
+### Pilot governance & compliance
+
+* **Pilot scope** (`/admin/pilot`): regions, at most two value chains (`platform.value_chains`), business sizes, capacity, priority problems and the first-month decisions (success definition, support model policy, partner coordination). New businesses are evaluated at the end of onboarding: eligible, waitlisted (capacity) or ineligible; staff can override with a reason.
+* **Decision gates** at weeks 6, 16 and 24 with a criteria checklist; a negative decision (amend / postpone / revise / stop) requires a root cause, and a KPI snapshot is stored as evidence.
+* **Weekly results & errors report** (`pilot:weekly-report`, Saturday–Friday): cases, reviews, matches, outcomes, plus AI corrections, AI provider incidents, failed jobs, 48h SLA breaches, disputes, complaints and dissatisfaction; notes and CSV export.
+* **Service paths**: education, mentoring, problem review and professional introduction are allowed; investment, fund transfer, commercial contracts, sensitive data exchange and cross-border data need legal review. Commercial engagements and sensitive cases with a supporter abroad open a review automatically; confidential case data stays hidden from that supporter until approved.
+* **Partners** with referral codes (`/register?ref=CODE`), referral source per case; business **team invitations** (owner / admin / member); **complaints**; GDPR-style **data export** (signed download) and **deletion** requests reviewed by legal; supporter profiles (individual or organisation) with per-field privacy levels.
+
 ### KPIs
 
-KPIs are rows in `kpis` bound to a metric in `MetricCalculator`, with dated targets in `kpi_targets` and daily `kpi_snapshots` (`kpi:snapshot`). Seeded with the pilot targets: 30 businesses, 15 verified supporters, 50 real cases, initial review ≤ 48h, AI agreement ≥ 80%, clear next action ≥ 70%, match acceptance ≥ 50%, plus satisfaction, effective-action and resolution rates.
+KPIs are rows in `kpis` bound to a metric in `MetricCalculator`, with dated targets in `kpi_targets` and daily `kpi_snapshots` (`kpi:snapshot`). Seeded with the pilot targets: 30 businesses, 15 verified supporters, 50 real cases, 80% of cases with an initial review within 48h (plus the average hours), AI agreement ≥ 80%, clear next action ≥ 70% of accepted cases, outcome confirmation, dissatisfaction ≤ 20%, supporters abroad, match acceptance ≥ 50%, plus satisfaction, effective-action and resolution rates.
 
 ## Operations
 
-* Scheduler (`* * * * * php artisan schedule:run`): reminders every 15 min (task deadlines, meetings), KPI snapshot, nightly backup, weekly retention pruning, Horizon snapshots.
+* Scheduler (`* * * * * php artisan schedule:run`): reminders every 15 min (task deadlines, meetings), KPI snapshot, outcome auto-confirmation, weekly pilot report, nightly backup, weekly retention pruning, Horizon snapshots.
 * Long-running processes: `deploy/supervisor.conf` (Horizon, Reverb, Inertia SSR). Nginx sample: `deploy/nginx.conf`. Deploy script: `deploy/deploy.sh`.
-* Notifications: in-app + email; SMS/WhatsApp channels exist behind drivers (`SMS_DRIVER`, `WHATSAPP_DRIVER`) — the shipped `log` driver records messages; plug a gateway into `SmsChannel`/`WhatsAppChannel`.
+* Notifications: in-app + email, plus SMS (`SMS_DRIVER=kavenegar` or `webhook`) and WhatsApp (`WHATSAPP_DRIVER=cloud_api`, Meta Cloud API) per user preference; `log` records messages locally. Dates in notifications use each recipient's locale (Jalali for Persian) and time zone.
 * Token API (Sanctum): `GET /api/v1/me`, `/api/v1/cases`, `/api/v1/cases/{number}`, public `/api/v1/knowledge`.
 
 ## Tests
 
 ```bash
-php artisan test      # 36 tests: intake → AI → review → matching → workspace → outcome, RBAC, signed files, OTP, KPIs, i18n/SEO
+php artisan test      # intake → AI → review → matching → workspace → outcome confirmation, consent, legal review, pilot gates, team, privacy, channels
 ./vendor/bin/pint --test
 ```

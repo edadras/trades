@@ -11,6 +11,8 @@ enum Role: string
     case OperationsManager = 'operations_manager';
     case ProductManager = 'product_manager';
     case LegalCompliance = 'legal_compliance';
+    case ProgramLead = 'program_lead';
+    case NetworkManager = 'network_manager';
     case Admin = 'admin';
     case SuperAdmin = 'super_admin';
 
@@ -47,9 +49,19 @@ enum Role: string
                 Permission::CasesViewAll->value, Permission::CasesReview->value, Permission::CasesAssign->value, Permission::CasesManage->value,
                 Permission::ExpertsView->value, Permission::ExpertsVerify->value, Permission::BusinessesView->value,
                 Permission::AnalyticsView->value, Permission::KpisManage->value, Permission::KnowledgeView->value,
+                Permission::ReportsView->value, Permission::PartnersManage->value, Permission::ComplaintsManage->value,
             ],
-            self::ProductManager->value => [Permission::AnalyticsView->value, Permission::KpisManage->value, Permission::KnowledgeView->value, Permission::CategoriesManage->value],
-            self::LegalCompliance->value => [Permission::AuditView->value, Permission::AnalyticsView->value, Permission::BusinessesView->value, Permission::ExpertsView->value, Permission::KnowledgeApprove->value, Permission::KnowledgeView->value],
+            self::NetworkManager->value => [
+                Permission::ExpertsView->value, Permission::ExpertsVerify->value, Permission::CasesAssign->value, Permission::CasesViewAll->value,
+                Permission::ReportsView->value, Permission::PartnersManage->value,
+            ],
+            self::ProgramLead->value => [
+                Permission::AnalyticsView->value, Permission::KpisManage->value, Permission::PilotManage->value, Permission::ReportsView->value,
+                Permission::PartnersManage->value, Permission::BusinessesView->value, Permission::ExpertsView->value, Permission::CasesViewAll->value,
+                Permission::KnowledgeView->value,
+            ],
+            self::ProductManager->value => [Permission::ReportsView->value, Permission::AnalyticsView->value, Permission::KpisManage->value, Permission::KnowledgeView->value, Permission::CategoriesManage->value],
+            self::LegalCompliance->value => [Permission::LegalReview->value, Permission::DataRequestsManage->value, Permission::ComplaintsManage->value, Permission::CasesViewAll->value, Permission::AuditView->value, Permission::AnalyticsView->value, Permission::BusinessesView->value, Permission::ExpertsView->value, Permission::KnowledgeApprove->value, Permission::KnowledgeView->value],
             self::Admin->value => array_values(array_diff($all, [Permission::RolesManage->value])),
             self::SuperAdmin->value => $all,
         ];

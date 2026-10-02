@@ -3,6 +3,7 @@
 namespace App\Domain\Business\Models;
 
 use App\Domain\Cases\Models\SupportCase;
+use App\Domain\Pilot\Models\PilotProgram;
 use App\Models\User;
 use App\Support\HasPrivacySettings;
 use Database\Factories\BusinessFactory;
@@ -21,7 +22,7 @@ class Business extends Model
     public const ONBOARDING_STEPS = 9;
 
     protected $fillable = [
-        'owner_id', 'trade_name', 'legal_name', 'registration_number', 'logo_path', 'country', 'province', 'city',
+        'owner_id', 'partner_id', 'pilot_program_id', 'eligibility_status', 'eligibility_reason', 'trade_name', 'legal_name', 'registration_number', 'logo_path', 'country', 'province', 'city',
         'industry', 'employees_range', 'size', 'founded_year', 'website', 'description', 'products_services',
         'preferred_language', 'contact_name', 'contact_email', 'contact_phone', 'address', 'main_needs',
         'onboarding_step', 'onboarding_completed_at', 'status',
@@ -66,6 +67,42 @@ class Business extends Model
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'business_members')->withPivot('role')->withTimestamps();
+    }
+
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class);
+    }
+
+    public function pilotProgram(): BelongsTo
+    {
+        return $this->belongsTo(PilotProgram::class);
+    }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(BusinessInvitation::class)->latest();
+    }
+
+    /** Pilot eligibility: a business outside the active pilot's scope cannot open cases until staff admit it. */
+    public function canOpenCases(): bool
+    {
+        return $this->isOnboarded() && ! in_array($this->eligibility_status, ['ineligible', 'waitlisted'], true);
+    }
+
+    /** owner | admin | member */
+    public function roleOf(User $user): ?string
+    {
+        if ($this->owner_id === $user->id) {
+            return 'owner';
+        }
+
+        return $this->members()->whereKey($user->id)->first()?->pivot->role;
+    }
+
+    public function canManageTeam(User $user): bool
+    {
+        return in_array($this->roleOf($user), ['owner', 'admin'], true);
     }
 
     public function documents(): HasMany

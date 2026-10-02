@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Domain\Compliance\Actions\ProcessDataRequest;
+use App\Domain\Compliance\Models\DataRequest;
 use App\Domain\Identity\Actions\RecordConsent;
+use App\Domain\Identity\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\Consent;
 use App\Notifications\PlatformNotification;
@@ -10,6 +13,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -82,6 +87,10 @@ class SettingsController extends Controller
 
         return Inertia::render('Settings/Privacy', [
             'consents' => $latest,
+            'dataRequests' => DataRequest::where('user_id', $request->user()->id)->latest()->get()->map(fn ($d) => [
+                'id' => $d->id, 'type' => $d->type, 'status' => $d->status, 'resolution' => $d->resolution, 'created_at' => $d->created_at->toIso8601String(),
+                'download_url' => $d->type === 'export' && $d->status === 'completed' && $d->file_path ? URL::temporarySignedRoute('settings.data.download', now()->addMinutes(10), ['locale' => app()->getLocale(), 'dataRequest' => $d->id]) : null,
+            ]),
             'history' => Consent::where('user_id', $request->user()->id)->latest('id')->limit(30)->get(['type', 'granted', 'version', 'created_at']),
         ]);
     }
@@ -92,6 +101,24 @@ class SettingsController extends Controller
         $consent->handle($request->user(), $data['type'], $data['granted']);
 
         return back()->with('success', __('app.saved'));
+    }
+
+    public function requestData(Request $request, ProcessDataRequest $action): RedirectResponse
+    {
+        $data = $request->validate(['type' => ['required', 'in:export,delete'], 'reason' => ['nullable', 'string', 'max:1000'], 'password' => ['required_if:type,delete', 'nullable', 'current_password']]);
+        $pending = DataRequest::where('user_id', $request->user()->id)->where('type', $data['type'])->where('status', 'pending')->exists();
+        abort_if($pending, 409);
+        $action->open($request->user(), $data['type'], $data['reason'] ?? null);
+
+        return back()->with('success', __('privacy.request_received'));
+    }
+
+    public function downloadData(Request $request, DataRequest $dataRequest, AuditLogger $audit)
+    {
+        abort_unless($dataRequest->user_id === $request->user()->id && $dataRequest->file_path, 403);
+        $audit->log('privacy.export.downloaded', $request->user());
+
+        return Storage::disk(config('platform.uploads.disk'))->download($dataRequest->file_path, 'hamyar-data-export.json', ['Cache-Control' => 'private, no-store']);
     }
 
     private function describeAgent(string $agent): string

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Cases;
 
+use App\Domain\Business\Models\Partner;
 use App\Domain\Cases\Actions\AnswerIntakeQuestion;
 use App\Domain\Cases\Actions\CreateCase;
 use App\Domain\Cases\Enums\CaseStatus;
 use App\Domain\Cases\Models\CaseCategory;
 use App\Domain\Cases\Models\SupportCase;
+use App\Domain\Compliance\Models\ServicePath;
 use App\Domain\Identity\AuditLogger;
 use App\Domain\Messaging\Actions\MarkConversationRead;
 use App\Http\Controllers\Controller;
@@ -53,6 +55,7 @@ class CaseController extends Controller
                 'documents' => $draft->documents->map->fileSummary()->all(),
             ] : null,
             'example' => __('ai.disclaimer'),
+            'partners' => $request->user()->currentBusiness()->partner_id ? [] : Partner::where('is_active', true)->get()->map(fn ($p) => ['value' => $p->id, 'label' => $p->translate('name')]),
             'maxUploadKb' => config('platform.uploads.max_kb'),
             'accept' => collect(config('platform.uploads.mimes'))->map(fn ($m) => '.'.$m)->implode(','),
         ]);
@@ -67,9 +70,22 @@ class CaseController extends Controller
             'voice' => ['nullable', ...SecureFileStorage::voiceRules()],
             'attachments' => ['nullable', 'array', 'max:10'],
             'attachments.*' => SecureFileStorage::documentRules(),
+            'actions_taken' => ['nullable', 'string', 'max:4000'],
+            'partner_id' => ['nullable', 'integer', 'exists:partners,id'],
+            'consent_ai_processing' => ['boolean'],
+            'consent_share_with_foreign_experts' => ['boolean'],
+            'consent_anonymized_learning' => ['boolean'],
         ]);
 
-        $case = $create->handle($request->user(), $request->user()->currentBusiness(), $data['description'] ?? null, $request->file('voice'), $request->file('attachments', []), app()->getLocale());
+        $case = $create->handle(
+            $request->user(), $request->user()->currentBusiness(), $data['description'] ?? null, $request->file('voice'), $request->file('attachments', []), app()->getLocale(),
+            [
+                'ai_processing' => $request->boolean('consent_ai_processing', true),
+                'share_with_foreign_experts' => $request->boolean('consent_share_with_foreign_experts', true),
+                'anonymized_learning' => $request->boolean('consent_anonymized_learning'),
+            ],
+            ['actions_taken' => $data['actions_taken'] ?? null, 'partner_id' => $data['partner_id'] ?? null],
+        );
         $intake->next($case, $request->user());
 
         return redirect()->route('cases.create', ['case' => $case->number]);
@@ -95,6 +111,7 @@ class CaseController extends Controller
             'case' => $this->presenter->show($case, $user, $context),
             'tab' => $request->query('tab', 'overview'),
             'categories' => $context === 'staff' ? CaseCategory::where('is_active', true)->orderBy('sort_order')->get()->map->toOption() : [],
+            'servicePaths' => ServicePath::orderBy('sort_order')->get()->map->toOption(),
         ]);
     }
 

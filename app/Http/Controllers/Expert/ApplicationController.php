@@ -24,7 +24,7 @@ class ApplicationController extends Controller
 
         return Inertia::render('Expert/Profile', [
             'profile' => $profile ? array_merge($profile->only([
-                'headline', 'bio', 'country', 'city', 'timezone', 'years_experience', 'industries', 'serves_countries', 'collaboration_types',
+                'supporter_type', 'organization_name', 'support_models', 'headline', 'bio', 'country', 'city', 'timezone', 'years_experience', 'industries', 'serves_countries', 'collaboration_types',
                 'certifications', 'linkedin_url', 'max_active_cases', 'is_available',
             ]), [
                 'verification_status' => $profile->verification_status->value,
@@ -34,9 +34,12 @@ class ApplicationController extends Controller
                 'availability' => $profile->availability->map(fn ($a) => ['weekday' => $a->weekday, 'starts_at' => substr($a->starts_at, 0, 5), 'ends_at' => substr($a->ends_at, 0, 5)])->all(),
                 'documents' => $profile->documents->map(fn ($d) => $d->fileSummary() + ['type' => $d->type])->all(),
                 'feedback' => $profile->verifications->firstWhere('notes', '!=', null)?->notes,
+                'privacy' => $profile->privacyMap(),
             ]) : null,
             'categories' => CaseCategory::where('is_active', true)->where('slug', '!=', 'general')->orderBy('sort_order')->get()->map->toOption(),
             'collaborationTypes' => ExpertProfile::COLLABORATION_TYPES,
+            'supportModels' => ExpertProfile::SUPPORT_MODELS,
+            'defaultPrivacy' => ExpertProfile::defaultPrivacy(),
         ]);
     }
 

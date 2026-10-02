@@ -37,6 +37,7 @@ class HandleInertiaRequests extends Middleware
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'timezone' => $user->timezone ?: config('platform.default_timezone', 'Asia/Tehran'),
                     'avatar' => $user->avatar_path,
                     'roles' => $user->getRoleNames(),
                     'permissions' => $user->getAllPermissions()->pluck('name'),

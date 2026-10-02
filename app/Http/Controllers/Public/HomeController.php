@@ -31,7 +31,9 @@ class HomeController extends Controller
                 'cases' => (int) $metrics->value('real_cases'),
                 'review_hours' => $metrics->initialReviewHours(),
             ],
-            'stories' => SupportCase::query()->whereHas('outcome', fn ($q) => $q->whereIn('outcome', ['resolved', 'partially_resolved']))
+            'stories' => SupportCase::query()->whereHas('outcome', fn ($q) => $q->whereIn('outcome', ['resolved', 'partially_resolved'])->where('confirmation_status', 'confirmed'))
+                // Only cases whose business agreed to anonymised use for learning are published as stories.
+                ->where('data_consent->anonymized_learning', true)
                 ->whereHas('surveys', fn ($q) => $q->where('rating', '>=', 4)->whereNotNull('comment'))
                 ->with(['category', 'business', 'surveys', 'outcome'])->latest('closed_at')->limit(6)->get()
                 ->map(fn ($c) => [

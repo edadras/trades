@@ -21,6 +21,12 @@ enum Permission: string
     case AuditView = 'audit.view';
     case UsersManage = 'users.manage';
     case RolesManage = 'roles.manage';
+    case PilotManage = 'pilot.manage';
+    case ReportsView = 'reports.view';
+    case PartnersManage = 'partners.manage';
+    case LegalReview = 'legal.review';
+    case ComplaintsManage = 'complaints.manage';
+    case DataRequestsManage = 'data_requests.manage';
 
     /** @return array<int, string> */
     public static function values(): array

@@ -7,6 +7,8 @@ use App\Domain\Cases\CaseNotifier;
 use App\Domain\Cases\CaseTimeline;
 use App\Domain\Cases\Enums\CaseStatus;
 use App\Domain\Cases\Models\CaseExpert;
+use App\Domain\Compliance\Actions\RequestCollaboration;
+use App\Domain\Compliance\Models\ServicePath;
 use App\Domain\Identity\AuditLogger;
 use App\Domain\Matching\Enums\MatchStatus;
 use App\Domain\Matching\Models\ExpertMatch;
@@ -30,7 +32,8 @@ class RespondToInvitation
         private readonly AuditLogger $audit,
     ) {}
 
-    public function handle(ExpertMatch $match, User $expertUser, bool $accept, ?string $reason = null): ExpertMatch
+    /** @param array{engagement_model?: string|null, engagement_terms?: string|null} $engagement */
+    public function handle(ExpertMatch $match, User $expertUser, bool $accept, ?string $reason = null, array $engagement = []): ExpertMatch
     {
         if ($match->status !== MatchStatus::Invited) {
             throw ValidationException::withMessages(['match' => __('matching.errors.not_invited')]);
@@ -52,10 +55,17 @@ class RespondToInvitation
             return $match;
         }
 
-        DB::transaction(function () use ($match, $case, $expertUser) {
-            $match->update(['status' => MatchStatus::Active, 'expert_decided_at' => now()]);
+        $model = $engagement['engagement_model'] ?? ($match->expertProfile->support_models[0] ?? 'free');
+        $terms = $engagement['engagement_terms'] ?? null;
+
+        DB::transaction(function () use ($match, $case, $expertUser, $model, $terms) {
+            $match->update(['status' => MatchStatus::Active, 'expert_decided_at' => now(), 'engagement_model' => $model, 'engagement_terms' => $terms]);
             CaseExpert::updateOrCreate(['case_id' => $case->id, 'expert_profile_id' => $match->expert_profile_id], [
                 'expert_match_id' => $match->id,
+                'engagement_model' => $model,
+                'engagement_terms' => $terms,
+                'left_at' => null,
+                'leave_reason' => null,
                 'role' => $case->caseExperts()->where('status', 'active')->exists() ? 'support' : 'lead',
                 'status' => 'active',
                 'joined_at' => now(),
@@ -66,6 +76,7 @@ class RespondToInvitation
         });
 
         $this->workspace->handle($case->fresh());
+        $this->requireLegalReview($case->fresh(), $match->expertProfile, $model, $expertUser);
         $this->audit->log('case.confidential_access_granted', $case, ['expert_user_id' => $expertUser->id], $expertUser->id);
 
         foreach ([CaseStatus::Accepted, CaseStatus::InProgress] as $step) {
@@ -76,5 +87,22 @@ class RespondToInvitation
         $this->notifier->notifyParticipants($case->fresh(), 'expert_accepted', ['expert' => $expertUser->name], $expertUser->id);
 
         return $match;
+    }
+
+    /**
+     * Commercial engagements and sharing a sensitive case with an expert abroad must be cleared by
+     * legal & compliance; until then the expert does not see confidential business data.
+     */
+    private function requireLegalReview($case, $expert, string $model, User $expertUser): void
+    {
+        $paths = ServicePath::query()->get()->keyBy('key');
+        $request = app(RequestCollaboration::class);
+
+        if ($model === 'commercial' && isset($paths['commercial_contract'])) {
+            $request->handle($case, $expertUser, $paths['commercial_contract'], __('compliance.auto.commercial', ['expert' => $expertUser->name], $case->locale));
+        }
+        if ($case->is_sensitive && $expert->isForeignTo($case->business->country) && isset($paths['cross_border_data'])) {
+            $request->handle($case, $expertUser, $paths['cross_border_data'], __('compliance.auto.cross_border', ['expert' => $expertUser->name, 'country' => $expert->country], $case->locale));
+        }
     }
 }

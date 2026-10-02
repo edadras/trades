@@ -15,7 +15,7 @@ use Illuminate\Notifications\Notification;
  *
  * Events: case_updated, expert_suggested, expert_invited, expert_accepted, expert_declined, new_message,
  * document_requested, deadline_approaching, appointment_scheduled, appointment_reminder, case_resolved,
- * review_required, task_assigned, expert_verified.
+ * review_required, task_assigned, expert_verified, plus outcome confirmation, team, compliance and pilot events.
  */
 class PlatformNotification extends Notification implements ShouldQueue
 {
@@ -24,11 +24,14 @@ class PlatformNotification extends Notification implements ShouldQueue
     public const EVENTS = [
         'case_updated', 'expert_suggested', 'expert_invited', 'expert_accepted', 'expert_declined', 'new_message',
         'document_requested', 'deadline_approaching', 'appointment_scheduled', 'appointment_reminder', 'case_resolved',
-        'review_required', 'task_assigned', 'expert_verified',
+        'review_required', 'task_assigned', 'expert_verified', 'outcome_confirmation_requested', 'outcome_confirmed',
+        'outcome_auto_confirmed', 'outcome_disputed', 'case_reopened', 'expert_left', 'legal_review_required',
+        'collaboration_request_decided', 'complaint_received', 'complaint_updated', 'data_request_received',
+        'data_request_ready', 'data_request_decided', 'pilot_report_ready',
     ];
 
     /** Events that are worth an email by default (the rest are in-app only unless the user opts in). */
-    private const MAIL_BY_DEFAULT = ['expert_suggested', 'expert_invited', 'expert_accepted', 'document_requested', 'deadline_approaching', 'appointment_reminder', 'case_resolved', 'review_required', 'expert_verified'];
+    private const MAIL_BY_DEFAULT = ['expert_suggested', 'expert_invited', 'expert_accepted', 'document_requested', 'deadline_approaching', 'appointment_reminder', 'case_resolved', 'review_required', 'expert_verified', 'outcome_confirmation_requested', 'outcome_disputed', 'legal_review_required', 'complaint_updated', 'data_request_ready', 'data_request_decided', 'pilot_report_ready'];
 
     /** @param array<string, mixed> $params */
     public function __construct(public string $event, public array $params = [], public ?string $url = null) {}

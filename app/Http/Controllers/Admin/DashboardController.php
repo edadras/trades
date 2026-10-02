@@ -22,6 +22,8 @@ class DashboardController extends Controller
                 'aiVsHuman' => $report->aiVsHuman(),
                 'funnel' => $report->funnel(),
                 'overTime' => $report->casesOverTime(),
+                'bySource' => $report->casesBySource(),
+                'dissatisfaction' => $report->dissatisfactionReasons(),
             ],
             'experts' => $report->expertPerformance(),
         ]);

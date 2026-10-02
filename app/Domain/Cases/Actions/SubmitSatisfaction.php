@@ -19,6 +19,7 @@ class SubmitSatisfaction
             'comment' => $data['comment'] ?? null,
             'problem_solved' => $data['problem_solved'] ?? null,
             'would_recommend_expert' => $data['would_recommend_expert'] ?? null,
+            'dissatisfaction_reason' => $data['rating'] <= 3 ? ($data['dissatisfaction_reason'] ?? null) : null,
         ]);
         $this->timeline->record($case, 'satisfaction_submitted', ['rating' => $survey->rating], $user->id);
 

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Domain\Cases\Actions\ReopenCase;
 use App\Domain\Cases\Enums\CaseStatus;
 use App\Domain\Cases\Models\SupportCase;
 use App\Domain\Identity\Enums\Permission;
@@ -16,7 +17,7 @@ class SupportCasePolicy
 
     public function create(User $user): bool
     {
-        return $user->can(Permission::CasesCreate->value) && $user->currentBusiness()?->isOnboarded();
+        return $user->can(Permission::CasesCreate->value) && (bool) $user->currentBusiness()?->canOpenCases();
     }
 
     /** Business members, active experts and staff with case access. */
@@ -41,10 +42,50 @@ class SupportCasePolicy
         );
     }
 
-    /** See confidential business data (contacts, registration) — only after an expert accepts. */
+    /**
+     * See confidential business data (contacts, registration, documents) — only after an expert accepts,
+     * and for an expert abroad on a sensitive case only once legal & compliance cleared the data exchange.
+     */
     public function viewConfidential(User $user, SupportCase $case): bool
     {
-        return $this->isBusinessMember($user, $case) || $case->hasActiveExpert($user) || $user->can(Permission::CasesViewAll->value);
+        if ($this->isBusinessMember($user, $case) || $user->can(Permission::CasesViewAll->value)) {
+            return true;
+        }
+        if (! $case->hasActiveExpert($user)) {
+            return false;
+        }
+
+        return ! $case->collaborationRequests()->whereIn('status', ['pending', 'rejected'])
+            ->whereHas('servicePath', fn ($q) => $q->where('key', 'cross_border_data'))->exists();
+    }
+
+    public function confirmOutcome(User $user, SupportCase $case): bool
+    {
+        return $this->isBusinessMember($user, $case);
+    }
+
+    /** Business members within the reopen window, or case managers at any time. */
+    public function reopen(User $user, SupportCase $case): bool
+    {
+        if (! in_array($case->status, [CaseStatus::Resolved, CaseStatus::Closed], true)) {
+            return false;
+        }
+        if ($user->can(Permission::CasesManage->value)) {
+            return true;
+        }
+        $closedAt = $case->closed_at ?? $case->resolved_at;
+
+        return $this->isBusinessMember($user, $case) && (! $closedAt || $closedAt->gt(now()->subDays(ReopenCase::WINDOW_DAYS)));
+    }
+
+    public function requestCollaboration(User $user, SupportCase $case): bool
+    {
+        return $this->participate($user, $case);
+    }
+
+    public function leave(User $user, SupportCase $case): bool
+    {
+        return ! $case->isClosed() && $case->hasActiveExpert($user);
     }
 
     public function review(User $user, SupportCase $case): bool
@@ -74,7 +115,8 @@ class SupportCasePolicy
 
     public function rate(User $user, SupportCase $case): bool
     {
-        return $this->isBusinessMember($user, $case) && in_array($case->status, [CaseStatus::Resolved, CaseStatus::Closed], true);
+        return $this->isBusinessMember($user, $case)
+            && (in_array($case->status, [CaseStatus::Resolved, CaseStatus::Closed], true) || $case->hasConfirmedOutcome());
     }
 
     public function viewInternalNotes(User $user, SupportCase $case): bool

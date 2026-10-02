@@ -60,7 +60,7 @@ class CaseLifecycleTest extends TestCase
         $this->assertSame(MatchStatus::Invited, $match->fresh()->status);
         $this->actingAs($expert->user)->get('/fa/expert/invitations')->assertOk()
             ->assertDontSee($case->business->trade_name)->assertDontSee($case->business->contact_email);
-        $this->actingAs($expert->user)->post("/fa/expert/invitations/{$match->id}", ['accept' => true])->assertRedirect();
+        $this->actingAs($expert->user)->post("/fa/expert/invitations/{$match->id}", ['accept' => true, 'engagement_model' => 'free'])->assertRedirect();
 
         $case->refresh();
         $this->assertSame(CaseStatus::InProgress, $case->status);
@@ -79,7 +79,7 @@ class CaseLifecycleTest extends TestCase
 
         // Closing without outcome is refused.
         $this->actingAs($business)->post("/fa/cases/{$case->number}/close")->assertSessionHasErrors('outcome');
-        $this->actingAs($business)->post("/fa/cases/{$case->number}/outcome", ['outcome' => 'effective_action_started', 'reason' => 'Leak repairs started'])->assertSessionHasNoErrors();
+        $this->actingAs($business)->post("/fa/cases/{$case->number}/outcome", ['outcome' => 'effective_action_started', 'reason' => 'Leak repairs started'])->assertSessionHasNoErrors()->assertRedirect();
         $this->assertSame(CaseStatus::Resolved, $case->fresh()->status);
         $this->actingAs($business)->post("/fa/cases/{$case->number}/close")->assertSessionHasNoErrors();
         $this->assertSame(CaseStatus::Closed, $case->fresh()->status);

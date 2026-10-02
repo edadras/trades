@@ -19,8 +19,10 @@ class KpiAndKnowledgeTest extends TestCase
 
         $this->assertSame(30.0, $rows['active_businesses']['target']);
         $this->assertSame(1.0, $rows['active_businesses']['value']);
-        $this->assertSame(48.0, $rows['initial_review']['target']);
-        $this->assertSame('<=', $rows['initial_review']['comparator']);
+        $this->assertSame(80.0, $rows['initial_review']['target'], 'share of cases reviewed within 48h');
+        $this->assertSame('>=', $rows['initial_review']['comparator']);
+        $this->assertSame(48.0, $rows['initial_review_time']['target']);
+        $this->assertSame('<=', $rows['initial_review_time']['comparator']);
         $this->assertFalse($rows['active_businesses']['achieved']);
     }
 
@@ -44,7 +46,7 @@ class KpiAndKnowledgeTest extends TestCase
     public function test_admin_dashboard_renders(): void
     {
         $this->actingAs($this->staff(Role::SuperAdmin))->get('/en/admin')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('Admin/Dashboard')->has('kpis', 10)->has('charts.funnel', 7));
+            ->component('Admin/Dashboard')->has('kpis', 14)->has('charts.funnel', 7));
     }
 
     public function test_editing_approved_content_sends_it_back_to_review(): void

@@ -27,7 +27,7 @@ class TransitionCaseStatus
         if (! $from->canTransitionTo($to)) {
             throw ValidationException::withMessages(['status' => __('cases.errors.invalid_transition', ['from' => __("cases.status.{$from->value}"), 'to' => __("cases.status.{$to->value}")])]);
         }
-        if ($to === CaseStatus::Closed && ! $case->outcome()->exists()) {
+        if ($to === CaseStatus::Closed && ! $case->hasConfirmedOutcome()) {
             throw ValidationException::withMessages(['outcome' => __('cases.errors.outcome_required')]);
         }
 

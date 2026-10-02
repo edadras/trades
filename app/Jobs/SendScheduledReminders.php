@@ -6,6 +6,7 @@ use App\Domain\Cases\CaseNotifier;
 use App\Domain\Cases\Models\Appointment;
 use App\Domain\Cases\Models\CaseTask;
 use App\Models\User;
+use App\Support\LocalDate;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -19,7 +20,7 @@ class SendScheduledReminders implements ShouldQueue
         CaseTask::query()->pending()->whereNull('reminded_at')->whereNotNull('assignee_id')
             ->whereBetween('due_at', [now(), now()->addDay()])->with(['case.business', 'assignee'])
             ->each(function (CaseTask $task) use ($notifier) {
-                $notifier->notifyUser($task->assignee, $task->case, 'deadline_approaching', ['title' => $task->title, 'due' => $task->due_at->format('Y-m-d H:i')]);
+                $notifier->notifyUser($task->assignee, $task->case, 'deadline_approaching', ['title' => $task->title, 'due' => LocalDate::format($task->due_at, $task->assignee)]);
                 $task->update(['reminded_at' => now()]);
             });
 
@@ -30,7 +31,7 @@ class SendScheduledReminders implements ShouldQueue
             ->with('case.business')
             ->each(function (Appointment $appointment) use ($notifier) {
                 foreach (User::whereIn('id', $appointment->attendee_ids ?? [])->get() as $user) {
-                    $notifier->notifyUser($user, $appointment->case, 'appointment_reminder', ['title' => $appointment->title, 'when' => $appointment->starts_at->format('Y-m-d H:i')]);
+                    $notifier->notifyUser($user, $appointment->case, 'appointment_reminder', ['title' => $appointment->title, 'when' => LocalDate::format($appointment->starts_at, $user)]);
                 }
                 $appointment->update(['reminded_at' => now()]);
             });

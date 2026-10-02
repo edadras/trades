@@ -8,6 +8,7 @@ use App\Domain\AI\Providers\AIProviderException;
 use App\Domain\AI\Safety\PiiRedactor;
 use App\Domain\AI\Support\TextNormalizer;
 use App\Domain\Cases\Models\SupportCase;
+use App\Domain\Pilot\Models\AiIncident;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -36,11 +37,12 @@ class IntakeInterviewer
             return ['key' => $pending->question_key, 'question' => $pending->question];
         }
 
-        if ($this->ai->usesLanguageModel()) {
+        if ($this->ai->usesLanguageModel() && $case->consents('ai_processing')) {
             try {
                 return $this->askModel($case);
             } catch (AIProviderException $e) {
                 Log::warning('AI intake fell back to heuristics', ['error' => $e->getMessage()]);
+                AiIncident::record($this->ai->provider()->name(), 'intake', $e->getMessage(), $case->id);
             }
         }
 
@@ -60,7 +62,7 @@ class IntakeInterviewer
             $candidates['industry'] = __('ai.questions.industry', [], $locale);
         }
 
-        $classification = $this->classifier->classify($text, $case->business?->industry);
+        $classification = $this->classifier->classify($text, $case->business?->industry, $case->consents('ai_processing'));
         $slug = $classification->category?->slug ?? 'general';
         $taxonomy = collect(config('taxonomy'))->firstWhere('slug', $slug);
         foreach (($taxonomy['questions'][$locale] ?? []) as $i => $question) {
@@ -70,7 +72,9 @@ class IntakeInterviewer
         if (! preg_match('/\d|یک|دو|سه|چند|هفته|ماه|سال|week|month|year|since/u', $normalized)) {
             $candidates['timeframe'] = __('ai.questions.timeframe', [], $locale);
         }
-        $candidates['attempts'] = __('ai.questions.attempts', [], $locale);
+        if (blank($case->actions_taken)) {
+            $candidates['attempts'] = __('ai.questions.attempts', [], $locale);
+        }
         if ($case->documents->isEmpty()) {
             $candidates['documents'] = __('ai.questions.documents', [], $locale);
         }

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ExpertMatch extends Model
 {
     protected $fillable = [
-        'case_id', 'expert_profile_id', 'score', 'breakdown', 'reasons', 'status', 'source', 'proposed_by',
+        'case_id', 'expert_profile_id', 'score', 'breakdown', 'reasons', 'status', 'source', 'engagement_model', 'engagement_terms', 'proposed_by',
         'decision_reason', 'business_decided_at', 'expert_decided_at',
     ];
 

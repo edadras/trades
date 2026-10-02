@@ -32,7 +32,13 @@ class BusinessController extends Controller
         $audit->log('business.viewed', $business);
 
         return Inertia::render('Admin/BusinessShow', [
-            'business' => OnboardingController::payload($business) + ['owner' => $business->owner->only(['name', 'email'])],
+            'business' => OnboardingController::payload($business) + [
+                'owner' => $business->owner->only(['name', 'email']),
+                'eligibility_status' => $business->eligibility_status,
+                'eligibility_reason' => $business->eligibility_reason,
+                'partner' => $business->partner?->translate('name'),
+            ],
+            'canManagePilot' => request()->user()->can('pilot.manage'),
             'cases' => $business->cases()->with(['category', 'subcategory'])->latest()->get()->map(fn ($c) => $presenter->card($c)),
         ]);
     }

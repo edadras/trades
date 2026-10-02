@@ -11,6 +11,8 @@ return [
     'require_admin_2fa' => (bool) env('PLATFORM_REQUIRE_ADMIN_2FA', true),
     'max_matches_per_case' => 3,
     'otp_ttl_minutes' => 10,
+    // Days the business has to confirm or dispute an outcome proposed by an expert before it is auto-confirmed.
+    'outcome_confirmation_days' => (int) env('PLATFORM_OUTCOME_CONFIRMATION_DAYS', 14),
 
     'uploads' => [
         'disk' => env('PRIVATE_FILES_DISK', 'private'),
@@ -44,6 +46,10 @@ return [
         // Architecture is in place for SMS/WhatsApp; the "log" driver just records outgoing messages.
         'sms' => env('SMS_DRIVER', 'log'),
         'whatsapp' => env('WHATSAPP_DRIVER', 'log'),
+        // SMS: "kavenegar" (Iranian gateway) or "webhook" (POST {to, text} to any gateway); WhatsApp: "cloud_api" (Meta).
+        'kavenegar' => ['api_key' => env('KAVENEGAR_API_KEY'), 'sender' => env('KAVENEGAR_SENDER')],
+        'sms_webhook' => ['url' => env('SMS_WEBHOOK_URL'), 'token' => env('SMS_WEBHOOK_TOKEN')],
+        'whatsapp_cloud' => ['token' => env('WHATSAPP_TOKEN'), 'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'), 'version' => env('WHATSAPP_API_VERSION', 'v21.0')],
     ],
 
     'industries' => [
@@ -57,6 +63,20 @@ return [
     'main_needs' => ['finance', 'export', 'production', 'energy', 'technology', 'legal', 'hr', 'marketing', 'investment', 'training'],
 
     'countries' => ['IR', 'AE', 'TR', 'DE', 'GB', 'US', 'CA', 'FR', 'NL', 'SE', 'AU', 'OM', 'QA', 'IQ', 'AF', 'AM', 'AZ', 'CN', 'IN', 'RU'],
+
+    /*
+     * Value chains used to scope the pilot (at most `max_groups` of them, two by default).
+     * Each chain groups the industries that belong to it.
+     */
+    'value_chains' => [
+        'agri_food' => ['agriculture', 'food'],
+        'industrial' => ['manufacturing', 'textile', 'petrochemical', 'automotive', 'mining', 'construction'],
+        'trade_logistics' => ['retail', 'wholesale', 'logistics'],
+        'digital_creative' => ['it_software', 'creative', 'financial_services'],
+        'tourism_handicrafts' => ['tourism', 'handicrafts'],
+        'energy' => ['energy'],
+        'health_education' => ['healthcare', 'education'],
+    ],
 
     'provinces' => [
         'IR' => ['tehran', 'isfahan', 'khorasan_razavi', 'fars', 'east_azerbaijan', 'khuzestan', 'mazandaran', 'alborz', 'gilan', 'kerman', 'qom', 'yazd', 'markazi', 'hormozgan', 'other'],

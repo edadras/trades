@@ -8,6 +8,7 @@ use App\Domain\AI\Providers\AIProviderException;
 use App\Domain\AI\Safety\PiiRedactor;
 use App\Domain\Cases\Enums\Urgency;
 use App\Domain\Knowledge\Models\KnowledgeArticle;
+use App\Domain\Pilot\Models\AiIncident;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -32,6 +33,7 @@ class GuidanceComposer
                 return $this->composeWithModel($text, $summary, $classification, $retrieved, $safetyFlags, $locale);
             } catch (AIProviderException $e) {
                 Log::warning('AI guidance fell back to knowledge composition', ['error' => $e->getMessage()]);
+                AiIncident::record($this->ai->provider()->name(), 'guidance', $e->getMessage());
             }
         }
 

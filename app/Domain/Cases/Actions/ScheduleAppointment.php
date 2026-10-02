@@ -7,6 +7,7 @@ use App\Domain\Cases\CaseTimeline;
 use App\Domain\Cases\Models\Appointment;
 use App\Domain\Cases\Models\SupportCase;
 use App\Models\User;
+use App\Support\LocalDate;
 
 class ScheduleAppointment
 {
@@ -28,7 +29,11 @@ class ScheduleAppointment
         ]);
 
         $this->timeline->record($case, 'appointment_scheduled', ['title' => $appointment->title, 'starts_at' => $appointment->starts_at->toIso8601String()], $organizer->id);
-        $this->notifier->notifyParticipants($case, 'appointment_scheduled', ['title' => $appointment->title, 'when' => $appointment->starts_at->format('Y-m-d H:i')]);
+        foreach ($this->notifier->participants($case) as $participant) {
+            if ($participant->id !== $organizer->id) {
+                $this->notifier->notifyUser($participant, $case, 'appointment_scheduled', ['title' => $appointment->title, 'when' => LocalDate::format($appointment->starts_at, $participant)]);
+            }
+        }
 
         return $appointment;
     }

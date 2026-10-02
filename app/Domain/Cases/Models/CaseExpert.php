@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CaseExpert extends Model
 {
-    protected $fillable = ['case_id', 'expert_profile_id', 'expert_match_id', 'role', 'status', 'joined_at', 'left_at'];
+    protected $fillable = ['case_id', 'expert_profile_id', 'expert_match_id', 'role', 'engagement_model', 'engagement_terms', 'status', 'joined_at', 'left_at', 'leave_reason'];
 
     protected function casts(): array
     {

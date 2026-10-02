@@ -56,6 +56,9 @@ class AnswerIntakeQuestion
         $session = $this->session($case, $user);
         $record = CaseAnswer::where('case_id', $case->id)->where('question_key', $key)->firstOrFail();
         $record->update(['answer' => filled($answer) ? trim($answer) : '—']);
+        if ($key === 'attempts' && filled($answer) && blank($case->actions_taken)) {
+            $case->update(['actions_taken' => trim($answer)]);
+        }
         $session->messages()->create(['role' => 'user', 'content' => $record->answer, 'meta' => ['key' => $key]]);
 
         return $this->next($case, $user);

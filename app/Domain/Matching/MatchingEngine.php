@@ -30,13 +30,18 @@ class MatchingEngine
             return collect();
         }
 
-        $excluded = $case->matches()->whereIn('status', [MatchStatus::RejectedByBusiness->value, MatchStatus::ExpertDeclined->value, MatchStatus::Withdrawn->value])->pluck('expert_profile_id');
+        // Experts the business rejected, who declined, or who already left / were removed from this case.
+        // Proposals withdrawn only because another expert was engaged stay eligible for re-matching.
+        $excluded = $case->matches()->whereIn('status', [MatchStatus::RejectedByBusiness->value, MatchStatus::ExpertDeclined->value])->pluck('expert_profile_id')
+            ->merge($case->caseExperts()->whereIn('status', ['left', 'removed'])->pluck('expert_profile_id'))
+            ->merge($case->caseExperts()->where('status', 'active')->pluck('expert_profile_id'));
         $categoryIds = array_filter([$case->category_id, $case->subcategory_id]);
 
         $experts = ExpertProfile::query()->verified()->where('is_available', true)
             ->whereNotIn('id', $excluded)
             ->whereHas('skills', fn ($q) => $q->whereIn('case_category_id', $categoryIds))
             ->where('user_id', '!=', $case->business->owner_id)
+            ->when(! $case->consents('share_with_foreign_experts'), fn ($q) => $q->where('country', $case->business->country))
             ->with(['user', 'skills', 'languages', 'availability', 'categories'])
             ->get();
 
@@ -105,7 +110,7 @@ class MatchingEngine
 
         $rows = DB::table('case_experts')
             ->join('cases', 'cases.id', '=', 'case_experts.case_id')
-            ->leftJoin('case_outcomes', 'case_outcomes.case_id', '=', 'cases.id')
+            ->leftJoin('case_outcomes', fn ($j) => $j->on('case_outcomes.case_id', '=', 'cases.id')->whereNull('case_outcomes.superseded_at'))
             ->whereIn('case_experts.expert_profile_id', $expertIds)
             ->where('cases.category_id', $categoryId)
             ->whereNotNull('case_outcomes.id')

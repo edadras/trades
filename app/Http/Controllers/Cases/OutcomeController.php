@@ -6,6 +6,7 @@ use App\Domain\Cases\Actions\CloseCase;
 use App\Domain\Cases\Actions\RecordOutcome;
 use App\Domain\Cases\Actions\SubmitSatisfaction;
 use App\Domain\Cases\Enums\OutcomeType;
+use App\Domain\Cases\Models\SatisfactionSurvey;
 use App\Domain\Cases\Models\SupportCase;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +43,7 @@ class OutcomeController extends Controller
         $data = $request->validate([
             'rating' => ['required', 'integer', 'between:1,5'],
             'comment' => ['nullable', 'string', 'max:2000'],
+            'dissatisfaction_reason' => ['nullable', 'required_if:rating,1,2,3', Rule::in(SatisfactionSurvey::DISSATISFACTION_REASONS)],
             'problem_solved' => ['nullable', 'boolean'],
             'would_recommend_expert' => ['nullable', 'boolean'],
         ]);

@@ -24,7 +24,7 @@ class FileAccess
     public function allows(User $user, Model $file): bool
     {
         return match (true) {
-            $file instanceof CaseDocument => $user->can('view', $file->case),
+            $file instanceof CaseDocument => $user->can('viewConfidential', $file->case),
             $file instanceof MessageAttachment => (bool) $file->message?->conversation?->hasMember($user) || $user->can(Permission::CasesViewAll->value),
             $file instanceof ExpertDocument => $file->expertProfile?->user_id === $user->id || $user->can(Permission::ExpertsVerify->value),
             $file instanceof BusinessDocument => $this->businessDocument($user, $file),
