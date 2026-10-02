@@ -8,6 +8,7 @@ import Icon from '@/Components/ui/Icon.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import Modal from '@/Components/ui/Modal.vue';
 import Field from '@/Components/ui/Field.vue';
+import DateTimeField from '@/Components/ui/DateTimeField.vue';
 import Checkbox from '@/Components/ui/Checkbox.vue';
 import { route, useI18n } from '@/i18n';
 
@@ -79,7 +80,7 @@ const submitRequest = () => post(request, 'cases.documents.request', requestModa
                 <Field v-model="task.description" as="textarea" :rows="2" :label="$t('fields.description')" />
                 <div class="grid gap-4 sm:grid-cols-2">
                     <Field v-model="task.owner_role" as="select" :options="owners" :label="$t('tasks.owner')" required />
-                    <Field v-model="task.due_at" type="datetime-local" :label="$t('fields.due_at')" dir="ltr" :error="task.errors.due_at" />
+                    <DateTimeField v-model="task.due_at" :label="$t('fields.due_at')" :error="task.errors.due_at" />
                 </div>
                 <Checkbox v-model="task.is_next_action" :label="$t('tasks.mark_next')" />
             </form>
@@ -89,8 +90,8 @@ const submitRequest = () => post(request, 'cases.documents.request', requestModa
             <form id="meeting-form" class="space-y-4" @submit.prevent="submitMeeting">
                 <Field v-model="meeting.title" :label="$t('fields.title')" required :error="meeting.errors.title" />
                 <div class="grid gap-4 sm:grid-cols-2">
-                    <Field v-model="meeting.starts_at" type="datetime-local" :label="$t('fields.starts_at')" dir="ltr" required :error="meeting.errors.starts_at" />
-                    <Field v-model="meeting.ends_at" type="datetime-local" :label="$t('fields.ends_at')" dir="ltr" required :error="meeting.errors.ends_at" />
+                    <DateTimeField v-model="meeting.starts_at" :label="$t('fields.starts_at')" required :error="meeting.errors.starts_at" />
+                    <DateTimeField v-model="meeting.ends_at" :label="$t('fields.ends_at')" required :error="meeting.errors.ends_at" />
                 </div>
                 <Field v-model="meeting.meeting_url" :label="$t('appointments.url')" dir="ltr" placeholder="https://" :error="meeting.errors.meeting_url" />
                 <Field v-model="meeting.agenda" as="textarea" :rows="2" :label="$t('appointments.agenda')" />
@@ -100,7 +101,7 @@ const submitRequest = () => post(request, 'cases.documents.request', requestModa
         <Modal :show="requestModal" :title="$t('tasks.request_document')" @close="requestModal = false">
             <form id="request-form" class="space-y-4" @submit.prevent="submitRequest">
                 <Field v-model="request.what" as="textarea" :rows="2" :label="$t('tasks.what_needed')" required :error="request.errors.what" />
-                <Field v-model="request.due_at" type="datetime-local" :label="$t('fields.due_at')" dir="ltr" />
+                <DateTimeField v-model="request.due_at" :label="$t('fields.due_at')" />
             </form>
             <template #footer><Button type="submit" form="request-form" icon="send" :loading="request.processing">{{ $t('common.send') }}</Button></template>
         </Modal>

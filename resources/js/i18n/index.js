@@ -6,8 +6,12 @@ import publicSite from './messages/public';
 import app from './messages/app';
 import cases from './messages/cases';
 import admin from './messages/admin';
+import pilot from './messages/pilot';
+import governance from './messages/governance';
+import lifecycle from './messages/lifecycle';
+import account from './messages/account';
 
-const bundles = [common, publicSite, app, cases, admin];
+const bundles = [common, publicSite, app, cases, admin, pilot, governance, lifecycle, account];
 const dictionaries = { fa: {}, en: {} };
 for (const bundle of bundles) {
     for (const locale of Object.keys(dictionaries)) Object.assign(dictionaries[locale], bundle[locale]);

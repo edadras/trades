@@ -6,6 +6,7 @@ import { router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Card from '@/Components/ui/Card.vue';
 import Field from '@/Components/ui/Field.vue';
+import DateTimeField from '@/Components/ui/DateTimeField.vue';
 import Button from '@/Components/ui/Button.vue';
 import Tabs from '@/Components/ui/Tabs.vue';
 import Badge from '@/Components/ui/Badge.vue';
@@ -81,7 +82,7 @@ const tone = { draft: 'gray', in_review: 'amber', approved: 'green', archived: '
                         <Field v-model="form.knowledge_source_id" as="select" :label="$t('knowledge.source')" :options="sources.map((s) => ({ value: s.id, label: s.name }))" />
                         <div class="grid grid-cols-2 gap-3">
                             <Field v-model="form.reading_minutes" type="number" dir="ltr" :label="$t('knowledge_admin.minutes')" />
-                            <Field v-model="form.valid_until" type="date" dir="ltr" :label="$t('knowledge_admin.valid_until')" />
+                            <DateTimeField v-model="form.valid_until" mode="date" :label="$t('knowledge_admin.valid_until')" />
                         </div>
                         <Field v-model="form.country" as="select" :label="$t('fields.country')" :options="page.props.options.countries" />
                         <Field v-model="form.slug" label="Slug" dir="ltr" :error="form.errors.slug" />

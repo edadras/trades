@@ -13,6 +13,20 @@ const notifFa = {
     review_required: { title: 'نیاز به بررسی: :case', body: 'مورد جدیدی در صف بررسی است.' },
     task_assigned: { title: 'اقدام جدید: :title', body: 'در پرونده :case' },
     expert_verified: { title: 'وضعیت پروفایل متخصص شما تغییر کرد', body: 'وضعیت: :status' },
+    outcome_confirmation_requested: { title: 'تأیید نتیجه پرونده :case', body: 'پشتیبان نتیجه را ثبت کرد؛ لطفاً تأیید یا اعتراض کنید.' },
+    outcome_confirmed: { title: 'نتیجه پرونده :case تأیید شد', body: 'کسب‌وکار نتیجه را تأیید کرد.' },
+    outcome_auto_confirmed: { title: 'نتیجه پرونده :case خودکار تأیید شد', body: 'مهلت تأیید به پایان رسید.' },
+    outcome_disputed: { title: 'اعتراض به نتیجه :case', body: ':reason' },
+    case_reopened: { title: 'پرونده :case بازگشایی شد', body: 'کار روی پرونده ادامه می‌یابد.' },
+    expert_left: { title: 'تغییر تیم پرونده :case', body: ':expert دیگر عضو تیم نیست.' },
+    legal_review_required: { title: 'نیاز به بررسی حقوقی: :path', body: 'یک درخواست همکاری حساس منتظر بررسی است.' },
+    collaboration_request_decided: { title: 'درخواست همکاری :case بررسی شد', body: '«:path» — :status' },
+    complaint_received: { title: 'شکایت جدید: :subject', body: 'یک درخواست پشتیبانی جدید ثبت شد.' },
+    complaint_updated: { title: 'درخواست شما به‌روز شد: :subject', body: 'وضعیت: :status' },
+    data_request_received: { title: 'درخواست داده جدید', body: 'نوع: :type' },
+    data_request_ready: { title: 'خروجی داده‌های شما آماده است', body: 'از تنظیمات حریم خصوصی دریافت کنید.' },
+    data_request_decided: { title: 'درخواست حذف شما بررسی شد', body: 'نتیجه را در تنظیمات حریم خصوصی ببینید.' },
+    pilot_report_ready: { title: 'گزارش هفتگی پایلوت: :week', body: 'گزارش نتایج و خطاها آماده است.' },
 };
 const notifEn = {
     case_updated: { title: 'Case :case updated', body: 'New status: :status' },
@@ -29,9 +43,23 @@ const notifEn = {
     review_required: { title: 'Review required: :case', body: 'A new item is in the review queue.' },
     task_assigned: { title: 'New action: :title', body: 'In case :case' },
     expert_verified: { title: 'Your expert profile status changed', body: 'Status: :status' },
+    outcome_confirmation_requested: { title: 'Confirm the outcome of :case', body: 'A supporter recorded the outcome; please confirm or dispute it.' },
+    outcome_confirmed: { title: 'Outcome confirmed for :case', body: 'The business confirmed the outcome.' },
+    outcome_auto_confirmed: { title: 'Outcome auto-confirmed for :case', body: 'The confirmation period ended.' },
+    outcome_disputed: { title: 'Outcome disputed for :case', body: ':reason' },
+    case_reopened: { title: 'Case :case reopened', body: 'Work on the case continues.' },
+    expert_left: { title: 'Case team changed: :case', body: ':expert is no longer on the team.' },
+    legal_review_required: { title: 'Legal review needed: :path', body: 'A sensitive collaboration request is waiting for review.' },
+    collaboration_request_decided: { title: 'Collaboration request reviewed for :case', body: '“:path” — :status' },
+    complaint_received: { title: 'New complaint: :subject', body: 'A new support request was submitted.' },
+    complaint_updated: { title: 'Your request was updated: :subject', body: 'Status: :status' },
+    data_request_received: { title: 'New data request', body: 'Type: :type' },
+    data_request_ready: { title: 'Your data export is ready', body: 'Download it from privacy settings.' },
+    data_request_decided: { title: 'Your deletion request was reviewed', body: 'See the result in privacy settings.' },
+    pilot_report_ready: { title: 'Weekly pilot report: :week', body: 'The results and errors report is ready.' },
 };
-const eventsFa = { case_updated: 'تغییر وضعیت پرونده', expert_suggested: 'پیشنهاد پشتیبان', expert_invited: 'دعوت به همکاری', expert_accepted: 'پذیرش متخصص', expert_declined: 'رد دعوت توسط متخصص', new_message: 'پیام جدید', document_requested: 'درخواست مدرک', deadline_approaching: 'نزدیک شدن مهلت', appointment_scheduled: 'جلسه جدید', appointment_reminder: 'یادآوری جلسه', case_resolved: 'ثبت نتیجه پرونده', review_required: 'نیاز به بررسی', task_assigned: 'اقدام جدید', expert_verified: 'وضعیت تأیید متخصص' };
-const eventsEn = { case_updated: 'Case updated', expert_suggested: 'Expert suggested', expert_invited: 'Invitation', expert_accepted: 'Expert accepted', expert_declined: 'Expert declined', new_message: 'New message', document_requested: 'Document requested', deadline_approaching: 'Deadline approaching', appointment_scheduled: 'New meeting', appointment_reminder: 'Meeting reminder', case_resolved: 'Case resolved', review_required: 'Review required', task_assigned: 'Action assigned', expert_verified: 'Expert verification' };
+const eventsFa = { case_updated: 'تغییر وضعیت پرونده', expert_suggested: 'پیشنهاد پشتیبان', expert_invited: 'دعوت به همکاری', expert_accepted: 'پذیرش متخصص', expert_declined: 'رد دعوت توسط متخصص', new_message: 'پیام جدید', document_requested: 'درخواست مدرک', deadline_approaching: 'نزدیک شدن مهلت', appointment_scheduled: 'جلسه جدید', appointment_reminder: 'یادآوری جلسه', case_resolved: 'ثبت نتیجه پرونده', review_required: 'نیاز به بررسی', task_assigned: 'اقدام جدید', expert_verified: 'وضعیت تأیید متخصص', outcome_confirmation_requested: 'تأیید نتیجه', outcome_confirmed: 'نتیجه تأیید شد', outcome_auto_confirmed: 'تأیید خودکار نتیجه', outcome_disputed: 'اعتراض به نتیجه', case_reopened: 'بازگشایی پرونده', expert_left: 'تغییر تیم پرونده', legal_review_required: 'بررسی حقوقی', collaboration_request_decided: 'نتیجه بررسی همکاری', complaint_received: 'شکایت جدید', complaint_updated: 'به‌روزرسانی درخواست پشتیبانی', data_request_received: 'درخواست داده', data_request_ready: 'خروجی داده آماده', data_request_decided: 'نتیجه درخواست حذف', pilot_report_ready: 'گزارش هفتگی پایلوت' };
+const eventsEn = { case_updated: 'Case updated', expert_suggested: 'Expert suggested', expert_invited: 'Invitation', expert_accepted: 'Expert accepted', expert_declined: 'Expert declined', new_message: 'New message', document_requested: 'Document requested', deadline_approaching: 'Deadline approaching', appointment_scheduled: 'New meeting', appointment_reminder: 'Meeting reminder', case_resolved: 'Case resolved', review_required: 'Review required', task_assigned: 'Action assigned', expert_verified: 'Expert verification', outcome_confirmation_requested: 'Outcome confirmation', outcome_confirmed: 'Outcome confirmed', outcome_auto_confirmed: 'Outcome auto-confirmed', outcome_disputed: 'Outcome disputed', case_reopened: 'Case reopened', expert_left: 'Case team change', legal_review_required: 'Legal review', collaboration_request_decided: 'Collaboration review result', complaint_received: 'New complaint', complaint_updated: 'Support request update', data_request_received: 'Data request', data_request_ready: 'Data export ready', data_request_decided: 'Deletion request result', pilot_report_ready: 'Weekly pilot report' };
 
 export default {
     fa: {

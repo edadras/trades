@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
 import Field from '@/Components/ui/Field.vue';
+import DateTimeField from '@/Components/ui/DateTimeField.vue';
 import Modal from '@/Components/ui/Modal.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import Checkbox from '@/Components/ui/Checkbox.vue';
@@ -56,8 +57,8 @@ const metricOptions = Object.keys(props.metrics).map((m) => ({ value: m, label: 
                 <Field v-model="form.comparator" as="select" :options="[{ value: '>=', label: '≥' }, { value: '<=', label: '≤' }]" :label="$t('kpi.comparator')" />
                 <Field v-model="form.target_value" type="number" step="any" dir="ltr" :label="$t('kpi.target')" :error="form.errors.target_value" />
                 <Field v-model="form.sort_order" type="number" dir="ltr" :label="$t('kpi.order')" />
-                <Field v-model="form.period_start" type="date" dir="ltr" :label="$t('kpi.period_start')" />
-                <Field v-model="form.period_end" type="date" dir="ltr" :label="$t('kpi.period_end')" :error="form.errors.period_end" />
+                <DateTimeField v-model="form.period_start" mode="date" :label="$t('kpi.period_start')" />
+                <DateTimeField v-model="form.period_end" mode="date" :label="$t('kpi.period_end')" :error="form.errors.period_end" />
                 <Field v-model="form.description.fa" class="sm:col-span-2" :label="$t('kpi.description_fa')" />
                 <Field v-model="form.description.en" class="sm:col-span-2" dir="ltr" :label="$t('kpi.description_en')" />
                 <Checkbox v-model="form.is_active" :label="$t('kpi.active')" />

@@ -8,9 +8,23 @@ import Icon from '@/Components/ui/Icon.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import CaseCard from '@/Components/domain/CaseCard.vue';
 import KnowledgeCard from '@/Components/domain/KnowledgeCard.vue';
+import Badge from '@/Components/ui/Badge.vue';
+import { computed } from 'vue';
 import { route, useI18n } from '@/i18n';
-defineProps({ business: Object, stats: Object, cases: Array, drafts: Number, tasks: Array, appointments: Array, recommended: Array, conversations: Array });
+const props = defineProps({ business: Object, pendingOutcomes: { type: Array, default: () => [] }, stats: Object, cases: Array, drafts: Number, tasks: Array, appointments: Array, recommended: Array, conversations: Array });
 const { t, dateTime, relative } = useI18n();
+
+const restricted = computed(() => ['ineligible', 'waitlisted'].includes(props.business.eligibility));
+const canOpenCases = computed(() => props.business.can_open_cases !== false);
+const knownReasons = ['region', 'industry', 'size', 'capacity'];
+/** Eligibility reasons are stored as comma-separated keys by the evaluator, or as free text when staff override. */
+const eligibilityReasons = computed(() =>
+    (props.business.eligibility_reason ?? '')
+        .split(',')
+        .map((r) => r.trim())
+        .filter(Boolean)
+        .map((r) => (knownReasons.includes(r) ? t(`eligibility_banner.reasons.${r}`) : r)),
+);
 </script>
 
 <template>
@@ -18,14 +32,51 @@ const { t, dateTime, relative } = useI18n();
         <!-- Greeting + primary CTA -->
         <section class="hero-gradient relative overflow-hidden rounded-[32px] p-6 text-white sm:p-10">
             <div class="relative z-10 max-w-2xl">
-                <p class="text-sm text-white/75">{{ business.name }}</p>
+                <p class="flex flex-wrap items-center gap-2 text-sm text-white/75">
+                    {{ business.name }}
+                    <Badge v-if="business.role" tone="glass">{{ $t('eligibility_banner.your_role', { role: $t(`team.roles.${business.role}`) }) }}</Badge>
+                </p>
                 <h2 class="mt-2 text-2xl font-semibold leading-snug sm:text-3xl">{{ $t('dashboard.greeting') }}</h2>
                 <div class="mt-6 flex flex-wrap gap-3">
-                    <Button :href="route('cases.create')" variant="light" size="lg" icon="plus">{{ $t('dashboard.new_problem') }}</Button>
+                    <Button v-if="canOpenCases" :href="route('cases.create')" variant="light" size="lg" icon="plus">{{ $t('dashboard.new_problem') }}</Button>
                     <Button v-if="drafts" :href="route('cases.index', { status: 'draft' })" variant="glass" icon="edit">{{ $t('dashboard.drafts', { n: drafts }) }}</Button>
                 </div>
             </div>
             <div class="pointer-events-none absolute -end-16 -top-16 size-72 rounded-full bg-white/10 blur-2xl" />
+        </section>
+
+        <section v-if="restricted" class="mt-6 flex flex-col gap-4 rounded-[var(--radius-card)] bg-amber-50 p-5 ring-1 ring-amber-200 sm:flex-row sm:items-start">
+            <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-white text-amber-700"><Icon name="alert" /></span>
+            <div class="min-w-0 flex-1 text-sm leading-6 text-amber-900">
+                <p class="text-base font-semibold">{{ $t(`eligibility_banner.${business.eligibility}_title`) }}</p>
+                <p class="mt-1">{{ $t(`eligibility_banner.${business.eligibility}_text`) }}</p>
+                <div v-if="eligibilityReasons.length" class="mt-2">
+                    <span class="font-medium">{{ $t('eligibility_banner.reasons_title') }}</span>
+                    <ul class="list-inside list-disc">
+                        <li v-for="(r, i) in eligibilityReasons" :key="i">{{ r }}</li>
+                    </ul>
+                </div>
+                <p class="mt-2 font-medium">{{ $t('eligibility_banner.no_new_cases') }}</p>
+            </div>
+            <Button :href="route('support.index')" variant="light" size="sm" icon="chat" class="shrink-0">{{ $t('eligibility_banner.contact') }}</Button>
+        </section>
+
+        <section v-if="pendingOutcomes.length" class="mt-6">
+            <Card :title="$t('eligibility_banner.pending_outcomes')" :subtitle="$t('eligibility_banner.pending_outcomes_hint')">
+                <ul class="space-y-2">
+                    <li v-for="o in pendingOutcomes" :key="o.number">
+                        <Link :href="route('cases.show', { case: o.number })" class="flex items-center gap-3 rounded-2xl p-2 hover:bg-navy-50">
+                            <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><Icon name="target" :size="16" /></span>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-medium text-ink">{{ o.title }}</p>
+                                <p class="text-xs text-gray-500" dir="ltr">{{ o.number }}</p>
+                            </div>
+                            <span class="hidden text-sm font-medium text-navy-700 sm:inline">{{ $t('eligibility_banner.review_outcome') }}</span>
+                            <Icon name="chevron" :size="16" class="text-gray-400" />
+                        </Link>
+                    </li>
+                </ul>
+            </Card>
         </section>
 
         <section class="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -45,7 +96,7 @@ const { t, dateTime, relative } = useI18n();
                     <CaseCard v-for="c in cases" :key="c.id" :item="c" :href="c.status === 'draft' ? route('cases.create', { case: c.number }) : route('cases.show', { case: c.number })" />
                 </div>
                 <EmptyState v-else icon="folder" :title="$t('dashboard.no_cases')" :text="$t('dashboard.no_cases_hint')">
-                    <Button :href="route('cases.create')" icon="plus">{{ $t('dashboard.new_problem') }}</Button>
+                    <Button v-if="canOpenCases" :href="route('cases.create')" icon="plus">{{ $t('dashboard.new_problem') }}</Button>
                 </EmptyState>
             </section>
 

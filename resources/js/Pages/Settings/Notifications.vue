@@ -6,7 +6,8 @@ import Button from '@/Components/ui/Button.vue';
 import SettingsNav from './SettingsNav.vue';
 import { route } from '@/i18n';
 const props = defineProps({ events: Array, preferences: Object, hasPhone: Boolean });
-const mailDefault = ['expert_suggested', 'expert_invited', 'expert_accepted', 'document_requested', 'deadline_approaching', 'appointment_reminder', 'case_resolved', 'review_required', 'expert_verified'];
+/** Mirrors PlatformNotification::MAIL_BY_DEFAULT. */
+const mailDefault = ['expert_suggested', 'expert_invited', 'expert_accepted', 'document_requested', 'deadline_approaching', 'appointment_reminder', 'case_resolved', 'review_required', 'expert_verified', 'outcome_confirmation_requested', 'outcome_disputed', 'legal_review_required', 'complaint_updated', 'data_request_ready', 'data_request_decided', 'pilot_report_ready'];
 const form = useForm({ preferences: Object.fromEntries(props.events.map((e) => [e, { mail: props.preferences[e]?.mail ?? mailDefault.includes(e), sms: !!props.preferences[e]?.sms, whatsapp: !!props.preferences[e]?.whatsapp }])) });
 </script>
 

@@ -28,7 +28,8 @@ const groups = computed(() => {
             { label: t('nav.cases'), icon: 'folder', href: route('cases.index'), match: 'cases.*', primary: true },
             { label: t('nav.new_case'), icon: 'plus', href: route('cases.create'), match: 'cases.create', primary: true, cta: true },
             { label: t('nav.learning'), icon: 'book', href: route('learning'), match: 'learning', primary: true },
-            { label: t('nav.business_profile'), icon: 'briefcase', href: route('business.profile'), match: 'business.*' },
+            { label: t('nav.business_profile'), icon: 'briefcase', href: route('business.profile'), match: 'business.profile' },
+            { label: t('nav.team'), icon: 'users', href: route('business.team.index'), match: 'business.team.*' },
         ] });
     }
     if (has('supporter') || user.value?.expert_status) {
@@ -48,7 +49,11 @@ const groups = computed(() => {
         if (can('kpis.manage')) items.push({ label: t('nav.kpis'), icon: 'target', href: route('admin.kpis.index'), match: 'admin.kpis.*' });
         if (can('experts.view')) items.push({ label: t('nav.experts'), icon: 'users', href: route('admin.experts.index'), match: 'admin.experts.*' });
         if (can('businesses.view')) items.push({ label: t('nav.businesses'), icon: 'briefcase', href: route('admin.businesses.index'), match: 'admin.businesses.*' });
+        if (can('pilot.manage') || can('reports.view')) items.push({ label: t('nav.pilot'), icon: 'flag', href: route('admin.pilot.show'), match: 'admin.pilot.*', primary: !can('cases.review') });
         if (can('knowledge.manage') || can('knowledge.approve')) items.push({ label: t('nav.knowledge_admin'), icon: 'book', href: route('admin.knowledge.index'), match: 'admin.knowledge.*', primary: !can('cases.review') });
+        if (can('knowledge.manage')) items.push({ label: t('nav.knowledge_taxonomy'), icon: 'layers', href: route('admin.taxonomy.index'), match: 'admin.taxonomy.*' });
+        if (can('partners.manage')) items.push({ label: t('nav.partners'), icon: 'network', href: route('admin.partners.index'), match: 'admin.partners.*' });
+        if (can('legal.review') || can('data_requests.manage') || can('complaints.manage')) items.push({ label: t('nav.compliance'), icon: 'scale', href: route('admin.compliance.index'), match: 'admin.compliance.*', primary: !can('cases.review') && !can('analytics.view') });
         if (can('categories.manage')) items.push({ label: t('nav.categories'), icon: 'layers', href: route('admin.categories.index'), match: 'admin.categories.*' });
         if (can('users.manage')) items.push({ label: t('nav.users'), icon: 'key', href: route('admin.users.index'), match: 'admin.users.*' });
         if (can('audit.view')) items.push({ label: t('nav.audit'), icon: 'shield', href: route('admin.audit.index'), match: 'admin.audit.*' });
@@ -113,6 +118,7 @@ const logout = () => router.post(route('logout'));
                             <Link :href="route('settings.security')" class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm hover:bg-navy-50"><Icon name="lock" :size="16" />{{ $t('nav.security') }}</Link>
                             <Link :href="route('settings.notifications')" class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm hover:bg-navy-50"><Icon name="bell" :size="16" />{{ $t('nav.notification_settings') }}</Link>
                             <Link :href="route('settings.privacy')" class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm hover:bg-navy-50"><Icon name="shield" :size="16" />{{ $t('nav.privacy') }}</Link>
+                            <Link :href="route('support.index')" class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm hover:bg-navy-50"><Icon name="info" :size="16" />{{ $t('nav.support') }}</Link>
                             <button type="button" class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-rose-600 hover:bg-rose-50" @click="logout"><Icon name="logout" :size="16" />{{ $t('nav.logout') }}</button>
                         </div>
                     </div>
@@ -151,6 +157,7 @@ const logout = () => router.post(route('logout'));
                 </div>
                 <div class="border-t border-[var(--border)] pt-4">
                     <Link :href="route('settings.profile')" class="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-navy-50"><Icon name="settings" :size="18" />{{ $t('nav.settings') }}</Link>
+                    <Link :href="route('support.index')" class="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-navy-50"><Icon name="info" :size="18" />{{ $t('nav.support') }}</Link>
                     <LocaleSwitch />
                     <button type="button" class="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-rose-600 hover:bg-rose-50" @click="logout"><Icon name="logout" :size="18" />{{ $t('nav.logout') }}</button>
                 </div>

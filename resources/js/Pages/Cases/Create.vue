@@ -6,17 +6,31 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Button from '@/Components/ui/Button.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import Field from '@/Components/ui/Field.vue';
+import Checkbox from '@/Components/ui/Checkbox.vue';
 import Uploader from '@/Components/ui/Uploader.vue';
 import VoiceRecorder from '@/Components/ui/VoiceRecorder.vue';
 import Avatar from '@/Components/ui/Avatar.vue';
 import Stepper from '@/Components/ui/Stepper.vue';
 import { route, useI18n } from '@/i18n';
 
-const props = defineProps({ draft: Object, example: String, maxUploadKb: Number, accept: String });
+const props = defineProps({ draft: Object, example: String, partners: { type: Array, default: () => [] }, maxUploadKb: Number, accept: String });
 const { t } = useI18n();
 
-const start = useForm({ description: '', voice: null, attachments: [] });
-const submitStart = () => start.post(route('cases.store'), { forceFormData: true });
+const start = useForm({
+    description: '', voice: null, attachments: [], actions_taken: '', partner_id: '',
+    consent_ai_processing: true, consent_share_with_foreign_experts: true, consent_anonymized_learning: false,
+});
+/** Booleans are sent as 1/0 because the request is multipart (FormData). */
+const submitStart = () => start
+    .transform((data) => ({
+        ...data,
+        partner_id: data.partner_id || null,
+        consent_ai_processing: data.consent_ai_processing ? 1 : 0,
+        consent_share_with_foreign_experts: data.consent_share_with_foreign_experts ? 1 : 0,
+        consent_anonymized_learning: data.consent_anonymized_learning ? 1 : 0,
+    }))
+    .post(route('cases.store'), { forceFormData: true });
+const consents = ['ai_processing', 'share_with_foreign_experts', 'anonymized_learning'];
 
 const pending = computed(() => props.draft?.answers.find((a) => a.answer === null));
 const answer = useForm({ key: '', answer: '', attachments: [] });
@@ -66,7 +80,24 @@ const examples = computed(() => [t('intake.example_1'), t('intake.example_2'), t
                         <p class="label">{{ $t('intake.attachments') }}</p>
                         <Uploader v-model="start.attachments" :accept="accept" :max-kb="maxUploadKb" :error="start.errors['attachments.0']" />
                     </div>
+                    <Field v-model="start.actions_taken" as="textarea" :rows="3" :label="$t('lifecycle.actions_taken_label')" :hint="$t('lifecycle.actions_taken_hint')" :placeholder="$t('lifecycle.actions_taken_placeholder')" :error="start.errors.actions_taken" />
+                    <Field v-if="partners.length" v-model="start.partner_id" as="select" :label="$t('lifecycle.referral_partner')" :hint="$t('lifecycle.referral_hint')" :placeholder="$t('lifecycle.referral_none')" :options="partners" :error="start.errors.partner_id" />
                 </div>
+                <fieldset class="mt-6 rounded-3xl bg-[var(--surface-muted)] p-4 ring-1 ring-[var(--border)] sm:p-5">
+                    <legend class="sr-only">{{ $t('data_consent.title') }}</legend>
+                    <div class="flex items-start gap-3">
+                        <span class="grid size-9 shrink-0 place-items-center rounded-2xl bg-white text-navy-800 ring-1 ring-[var(--border)]"><Icon name="shield-check" :size="18" /></span>
+                        <div class="min-w-0">
+                            <p class="font-semibold text-ink">{{ $t('data_consent.title') }}</p>
+                            <p class="mt-0.5 text-xs leading-6 text-gray-500">{{ $t('data_consent.subtitle') }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 grid gap-2">
+                        <div v-for="c in consents" :key="c" class="rounded-2xl bg-white p-3 ring-1 ring-[var(--border)]">
+                            <Checkbox v-model="start[`consent_${c}`]" :label="$t(`data_consent.${c}`)" :description="$t(`data_consent.${c}_hint`)" :error="start.errors[`consent_${c}`]" />
+                        </div>
+                    </div>
+                </fieldset>
                 <div class="mt-8 flex flex-col-reverse items-stretch justify-between gap-3 border-t border-[var(--border)] pt-6 sm:flex-row sm:items-center">
                     <p class="flex items-center gap-2 text-xs text-gray-500"><Icon name="lock" :size="14" />{{ $t('intake.privacy') }}</p>
                     <Button type="submit" size="lg" icon="arrow" :loading="start.processing" :disabled="!start.description && !start.voice">{{ $t('common.continue') }}</Button>

@@ -12,12 +12,18 @@ import Badge from '@/Components/ui/Badge.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import { route, useI18n } from '@/i18n';
 
-const props = defineProps({ profile: Object, categories: Array, collaborationTypes: Array });
+const props = defineProps({
+    profile: Object, categories: Array, collaborationTypes: Array,
+    supportModels: { type: Array, default: () => ['voluntary', 'free', 'subsidized', 'commercial'] },
+    defaultPrivacy: { type: Object, default: () => ({}) },
+});
 const page = usePage();
 const { t } = useI18n();
 const opts = computed(() => page.props.options);
 const p = props.profile ?? {};
 const form = useForm({
+    supporter_type: p.supporter_type ?? 'individual', organization_name: p.organization_name ?? '', support_models: p.support_models ?? [],
+    privacy: { ...props.defaultPrivacy, ...(p.privacy ?? {}) },
     headline: p.headline ?? '', bio: p.bio ?? '', country: p.country ?? 'IR', city: p.city ?? '', timezone: p.timezone ?? 'Asia/Tehran',
     years_experience: p.years_experience ?? 5, industries: p.industries ?? [], serves_countries: p.serves_countries ?? ['IR'],
     collaboration_types: p.collaboration_types ?? ['consultation'], certifications: p.certifications ?? [], linkedin_url: p.linkedin_url ?? '',
@@ -32,6 +38,9 @@ const catOptions = computed(() => props.categories.map((c) => ({ value: c.id, la
 const weekdays = [0, 1, 2, 3, 4, 5, 6].map((d) => ({ value: d, label: t(`weekdays.${d}`) }));
 const statusTone = { draft: 'gray', submitted: 'amber', in_review: 'amber', verified: 'green', rejected: 'red', suspended: 'red' };
 const canSubmit = computed(() => p.verification_status && ['draft', 'rejected'].includes(p.verification_status));
+const privacyLevels = ['private', 'case_team', 'verified_experts', 'public'];
+const privacyFields = ['city', 'linkedin_url', 'certifications', 'email', 'phone'];
+const collabOptions = computed(() => props.collaborationTypes.map((c) => ({ value: c, label: t(`supporter_profile.collab.${c}`) })));
 const save = () => form.put(route('expert.profile.update'), { preserveScroll: true });
 </script>
 
@@ -47,6 +56,32 @@ const save = () => form.put(route('expert.profile.update'), { preserveScroll: tr
         </div>
         <form class="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]" @submit.prevent="save">
             <div class="space-y-6">
+                <Card :title="$t('supporter_profile.identity')">
+                    <p class="label">{{ $t('supporter_profile.type_label') }}</p>
+                    <div class="grid gap-2 sm:grid-cols-2">
+                        <button v-for="type in ['individual', 'organization']" :key="type" type="button" class="flex items-start gap-3 rounded-[20px] p-4 text-start ring-1 transition" :class="form.supporter_type === type ? 'bg-navy-50 ring-navy-300' : 'ring-[var(--border)] hover:bg-gray-50'" :aria-pressed="form.supporter_type === type" @click="form.supporter_type = type">
+                            <Icon :name="type === 'individual' ? 'user' : 'factory'" :class="form.supporter_type === type ? 'text-navy-800' : 'text-gray-400'" />
+                            <span>
+                                <span class="block text-sm font-semibold">{{ $t(`supporter_profile.types.${type}`) }}</span>
+                                <span class="mt-0.5 block text-xs text-gray-500">{{ $t(`supporter_profile.types_hint.${type}`) }}</span>
+                            </span>
+                        </button>
+                    </div>
+                    <p v-if="form.errors.supporter_type" class="mt-2 text-sm text-rose-600">{{ form.errors.supporter_type }}</p>
+                    <Field v-if="form.supporter_type === 'organization'" v-model="form.organization_name" class="mt-5" :label="$t('supporter_profile.organization_name')" required :error="form.errors.organization_name" />
+                    <div class="mt-6">
+                        <p class="label">{{ $t('supporter_profile.support_models') }}</p>
+                        <p class="-mt-1 mb-3 text-xs text-gray-500">{{ $t('supporter_profile.support_models_hint') }}</p>
+                        <ChoiceChips v-model="form.support_models" :options="supportModels.map((m) => ({ value: m, label: $t(`supporter_profile.models.${m}`) }))" multiple />
+                        <ul class="mt-3 space-y-1.5 text-xs leading-5 text-gray-600">
+                            <li v-for="m in supportModels" :key="m" class="flex gap-2" :class="form.support_models.includes(m) ? 'text-navy-900' : ''">
+                                <span class="font-medium">{{ $t(`supporter_profile.models.${m}`) }}:</span>
+                                <span>{{ $t(`supporter_profile.models_hint.${m}`) }}</span>
+                            </li>
+                        </ul>
+                        <p v-if="form.errors.support_models" class="mt-2 text-sm text-rose-600">{{ form.errors.support_models }}</p>
+                    </div>
+                </Card>
                 <Card :title="$t('expert_profile.about')">
                     <div class="space-y-5">
                         <Field v-model="form.headline" :label="$t('fields.headline')" required :error="form.errors.headline" />
@@ -96,7 +131,8 @@ const save = () => form.put(route('expert.profile.update'), { preserveScroll: tr
             </div>
             <div class="space-y-6">
                 <Card :title="$t('expert_profile.collaboration')">
-                    <ChoiceChips v-model="form.collaboration_types" :options="collaborationTypes.map((c) => ({ value: c, label: $t(`collab.${c}`) }))" multiple />
+                    <ChoiceChips v-model="form.collaboration_types" :options="collabOptions" multiple />
+                    <p v-if="form.errors.collaboration_types" class="mt-2 text-sm text-rose-600">{{ form.errors.collaboration_types }}</p>
                     <div class="mt-5"><p class="label">{{ $t('expert_profile.serves') }}</p><ChoiceChips v-model="form.serves_countries" :options="opts.countries.slice(0, 8)" multiple /></div>
                     <Field v-model="form.max_active_cases" type="number" dir="ltr" class="mt-5" :label="$t('fields.max_active_cases')" />
                     <Checkbox v-model="form.is_available" class="mt-3" :label="$t('expert_profile.available')" />
@@ -110,6 +146,17 @@ const save = () => form.put(route('expert.profile.update'), { preserveScroll: tr
                             <button type="button" class="mb-2 grid size-10 place-items-center rounded-full text-gray-400 hover:text-rose-600" @click="form.availability.splice(i, 1)"><Icon name="trash" :size="16" /></button>
                         </div>
                         <Button size="sm" variant="light" icon="plus" @click="form.availability.push({ weekday: 0, starts_at: '09:00', ends_at: '13:00' })">{{ $t('expert_profile.add_slot') }}</Button>
+                    </div>
+                </Card>
+                <Card :title="$t('supporter_profile.privacy_title')" :subtitle="$t('supporter_profile.privacy_hint')">
+                    <div class="space-y-4">
+                        <div v-for="field in privacyFields" :key="field">
+                            <label :for="`privacy-${field}`" class="label">{{ $t(`supporter_profile.privacy_fields.${field}`) }}</label>
+                            <select :id="`privacy-${field}`" v-model="form.privacy[field]" class="input">
+                                <option v-for="l in privacyLevels" :key="l" :value="l">{{ $t(`privacy_levels.${l}`) }}</option>
+                            </select>
+                            <p v-if="form.errors[`privacy.${field}`]" class="mt-1 text-sm text-rose-600">{{ form.errors[`privacy.${field}`] }}</p>
+                        </div>
                     </div>
                 </Card>
                 <Card v-if="profile" :title="$t('expert_profile.documents')">

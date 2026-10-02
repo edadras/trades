@@ -22,12 +22,6 @@ const tone = { proposed: 'navy', invited: 'amber', active: 'green', rejected_by_
 
 <template>
     <div class="space-y-6">
-        <section v-if="item.experts.length">
-            <h3 class="mb-3 font-semibold text-ink">{{ $t('match.team') }}</h3>
-            <div class="grid gap-4 md:grid-cols-2">
-                <ExpertCard v-for="e in item.experts" :key="e.id" :expert="e"><Badge tone="green" class="mt-4 w-fit">{{ $t(`match.role_${e.role}`) }}</Badge></ExpertCard>
-            </div>
-        </section>
         <section>
             <div class="mb-3 flex items-center justify-between">
                 <h3 class="font-semibold text-ink">{{ $t('match.proposals') }}</h3>
@@ -38,6 +32,7 @@ const tone = { proposed: 'navy', invited: 'amber', active: 'green', rejected_by_
                     <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-4">
                         <Badge :tone="tone[m.status]">{{ $t(`match_status.${m.status}`) }}</Badge>
                         <Badge v-if="m.source === 'staff'" tone="sky"><Icon name="shield-check" :size="12" />{{ $t('match.by_staff') }}</Badge>
+                        <Badge v-if="m.engagement_model" :tone="m.engagement_model === 'commercial' ? 'amber' : 'gray'">{{ $t(`engagement.models.${m.engagement_model}`) }}</Badge>
                         <template v-if="item.can.decide_matches && m.status === 'proposed'">
                             <Button size="sm" icon="check" class="ms-auto" :loading="form.processing && form.accept" @click="decide(m, true)">{{ $t('match.accept') }}</Button>
                             <Button size="sm" variant="ghost" no-icon @click="rejecting = m">{{ $t('match.reject') }}</Button>

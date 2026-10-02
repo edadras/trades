@@ -53,6 +53,9 @@ export default {
             document_requested: 'مدرک درخواست شد', task_created: 'اقدام جدید تعریف شد', task_done: 'اقدام انجام شد', task_open: 'اقدام دوباره باز شد', task_in_progress: 'اقدام در حال انجام', task_cancelled: 'اقدام لغو شد',
             appointment_scheduled: 'جلسه تنظیم شد', note_added: 'یادداشت ثبت شد', outcome_recorded: 'نتیجه ثبت شد', satisfaction_submitted: 'نظر ثبت شد', voice_transcribed: 'پیام صوتی به متن تبدیل شد',
             case_escalated: 'پرونده ارجاع شد', case_manager_assigned: 'کارشناس پرونده تعیین شد',
+            outcome_confirmed: 'کسب‌وکار نتیجه را تأیید کرد', outcome_auto_confirmed: 'نتیجه به‌طور خودکار تأیید شد', outcome_disputed: 'کسب‌وکار به نتیجه اعتراض کرد', case_reopened: 'پرونده بازگشایی شد',
+            collaboration_requested: 'مسیر خدمت درخواست شد', collaboration_pending: 'درخواست مسیر خدمت در انتظار بررسی', collaboration_approved: 'درخواست مسیر خدمت تأیید شد', collaboration_rejected: 'درخواست مسیر خدمت رد شد',
+            expert_left: 'متخصص از پرونده خارج شد', expert_removed: 'متخصص از پرونده حذف شد', expert_replacement_requested: 'درخواست متخصص جایگزین ثبت شد', details_updated: 'اقدامات انجام‌شده به‌روز شد',
         },
         review: {
             panel_title: 'بررسی کارشناسی', waiting_since: 'در صف از :time', notes: 'یادداشت داخلی', notes_hint: 'فقط برای تیم همیار قابل مشاهده است.', run_matching: 'پس از تأیید، جستجوی متخصص انجام شود',
@@ -120,6 +123,9 @@ export default {
             document_requested: 'Document requested', task_created: 'Action created', task_done: 'Action completed', task_open: 'Action reopened', task_in_progress: 'Action in progress', task_cancelled: 'Action cancelled',
             appointment_scheduled: 'Meeting scheduled', note_added: 'Note added', outcome_recorded: 'Outcome recorded', satisfaction_submitted: 'Feedback submitted', voice_transcribed: 'Voice note transcribed',
             case_escalated: 'Case escalated', case_manager_assigned: 'Case manager assigned',
+            outcome_confirmed: 'Business confirmed the outcome', outcome_auto_confirmed: 'Outcome confirmed automatically', outcome_disputed: 'Business disputed the outcome', case_reopened: 'Case reopened',
+            collaboration_requested: 'Service path requested', collaboration_pending: 'Service path request awaiting review', collaboration_approved: 'Service path request approved', collaboration_rejected: 'Service path request rejected',
+            expert_left: 'Expert left the case', expert_removed: 'Expert removed from the case', expert_replacement_requested: 'Replacement expert requested', details_updated: 'Actions taken updated',
         },
         review: {
             panel_title: 'Expert review', waiting_since: 'In queue since :time', notes: 'Internal note', notes_hint: 'Visible to the Hamyar team only.', run_matching: 'Run expert matching after confirming',
