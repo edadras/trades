@@ -30,7 +30,7 @@ const time = (v) => date(v, { hour: '2-digit', minute: '2-digit' });
             <div class="mt-1 flex items-center gap-2 px-2 text-[11px] text-gray-400" :class="mine ? 'justify-end' : ''">
                 <time :title="dateTime(message.created_at)">{{ time(message.created_at) }}</time>
                 <Icon v-if="mine" :name="read ? 'check' : 'clock'" :size="12" :class="read ? 'text-navy-500' : ''" />
-                <button type="button" class="opacity-0 transition group-hover:opacity-100 focus:opacity-100" :aria-label="$t('chat.reply')" @click="$emit('reply', message)"><Icon name="reply" :size="13" /></button>
+                <button type="button" class="-m-2 grid size-9 place-items-center rounded-full transition hover:bg-gray-100 focus:opacity-100 lg:opacity-0 lg:group-hover:opacity-100" :aria-label="$t('chat.reply')" @click="$emit('reply', message)"><Icon name="reply" :size="15" /></button>
             </div>
         </div>
     </div>

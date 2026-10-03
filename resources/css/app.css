@@ -64,7 +64,7 @@ body { background: var(--surface); color: var(--text-primary); }
     .hero-gradient { background: linear-gradient(180deg, #13306f 0%, #3a5ea8 45%, #9fb5e0 80%, #eef3fd 100%); }
     .section-gradient { background: linear-gradient(180deg, #172f6a 0%, #3d5ea3 40%, #a9bde4 78%, #eef3fd 100%); }
     .soft-gradient { background: linear-gradient(180deg, #ffffff 0%, #e8effc 100%); }
-    .input { @apply block w-full rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[15px] text-ink placeholder:text-gray-400 transition focus:border-navy-400 focus:ring-4 focus:ring-navy-100 focus:outline-none disabled:bg-gray-50; }
+    .input { @apply block w-full rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-base lg:text-[15px] text-ink placeholder:text-gray-400 transition focus:border-navy-400 focus:ring-4 focus:ring-navy-100 focus:outline-none disabled:bg-gray-50; }
     .label { @apply mb-1.5 block text-sm font-medium text-gray-700; }
     .chip { @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium; }
     .prose-app { @apply text-[15px] leading-8 text-gray-700; }
@@ -82,4 +82,13 @@ body { background: var(--surface); color: var(--text-primary); }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+/* iOS zooms into any form field with text under 16px; keep fields at 16px on phones and tablets. */
+@media (max-width: 1023px) {
+    input:not([type='checkbox']):not([type='radio']):not([type='range']),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
 }

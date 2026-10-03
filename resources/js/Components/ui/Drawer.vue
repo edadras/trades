@@ -1,10 +1,25 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { router } from '@inertiajs/vue3';
 import Icon from './Icon.vue';
-defineProps({ show: Boolean, title: String });
+const props = defineProps({ show: Boolean, title: String });
 const emit = defineEmits(['close']);
 const mounted = ref(false);
-onMounted(() => (mounted.value = true));
+const onKey = (e) => e.key === 'Escape' && props.show && emit('close');
+let stopNavigate = null;
+onMounted(() => {
+    mounted.value = true;
+    window.addEventListener('keydown', onKey);
+    // Any visit (including links outside the drawer) closes it.
+    stopNavigate = router.on('navigate', () => props.show && emit('close'));
+});
+onBeforeUnmount(() => {
+    window.removeEventListener('keydown', onKey);
+    stopNavigate?.();
+    document.documentElement.style.overflow = '';
+});
+// The page behind an open drawer must not scroll on touch devices.
+watch(() => props.show, (open) => { if (typeof document !== 'undefined') document.documentElement.style.overflow = open ? 'hidden' : ''; });
 </script>
 
 <template>
@@ -16,7 +31,7 @@ onMounted(() => (mounted.value = true));
             <aside v-if="show" class="fixed inset-y-0 start-0 z-50 flex w-[86vw] max-w-sm flex-col bg-white shadow-2xl" role="dialog" aria-modal="true">
                 <header class="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
                     <slot name="header"><h2 class="text-lg font-semibold">{{ title }}</h2></slot>
-                    <button type="button" class="grid size-9 place-items-center rounded-full hover:bg-gray-100" :aria-label="$t('common.close')" @click="emit('close')"><Icon name="x" :size="18" /></button>
+                    <button type="button" class="grid size-11 place-items-center rounded-full hover:bg-gray-100" :aria-label="$t('common.close')" @click="emit('close')"><Icon name="x" :size="18" /></button>
                 </header>
                 <div class="flex-1 overflow-y-auto"><slot /></div>
             </aside>

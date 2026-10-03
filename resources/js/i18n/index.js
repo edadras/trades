@@ -36,6 +36,28 @@ export function route(name, params, absolute = false) {
     return ziggyRoute(name, params, absolute, config);
 }
 
+/**
+ * Whether a nav item points at the current page: by route-name pattern (e.g. 'cases.*'), falling back to an
+ * exact path comparison so root pages like /fa/dashboard are recognised in every environment.
+ */
+export function isCurrentPage(match, href) {
+    const page = usePage();
+    const pathOf = (url) => {
+        try {
+            return new URL(url, 'http://x').pathname.replace(/\/+$/, '');
+        } catch {
+            return url;
+        }
+    };
+    let byName = false;
+    try {
+        byName = match ? Boolean(route().current(match)) : false;
+    } catch {
+        byName = false;
+    }
+    return byName || (href ? pathOf(page.url) === pathOf(href) : false);
+}
+
 export function useI18n() {
     const page = usePage();
     const locale = computed(() => page.props.app?.locale ?? 'fa');

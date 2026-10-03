@@ -8,7 +8,7 @@ export default {
         },
         datetime: { day: 'روز', month: 'ماه', year: 'سال', time: 'ساعت', zone: 'به وقت :zone' },
         nav: {
-            switch_business: 'تغییر کسب‌وکار', pilot: 'پایلوت و تصمیم‌ها', partners: 'شرکای ارجاع', compliance: 'حقوقی و انطباق', team: 'تیم کسب‌وکار', support: 'پشتیبانی و شکایات', knowledge_taxonomy: 'دسته‌ها و منابع دانش',
+            learning_short: 'آموزش', new_case_short: 'ثبت مسئله', review_short: 'صف بررسی', knowledge_short: 'محتوا', compliance_short: 'انطباق', pilot_short: 'پایلوت', switch_business: 'تغییر کسب‌وکار', pilot: 'پایلوت و تصمیم‌ها', partners: 'شرکای ارجاع', compliance: 'حقوقی و انطباق', team: 'تیم کسب‌وکار', support: 'پشتیبانی و شکایات', knowledge_taxonomy: 'دسته‌ها و منابع دانش',
             home: 'خانه', how: 'چطور کار می‌کند؟', knowledge: 'مرکز آموزش', experts: 'متخصصان', about: 'درباره ما', login: 'ورود', get_started: 'شروع کنید',
             dashboard: 'داشبورد', menu: 'منو', more: 'بیشتر', become_expert: 'عضویت به‌عنوان متخصص', account: 'حساب کاربری',
             group_business: 'کسب‌وکار من', group_expert: 'پنل متخصص', group_staff: 'تیم همیار',
@@ -68,7 +68,7 @@ export default {
         },
         datetime: { day: 'Day', month: 'Month', year: 'Year', time: 'Time', zone: 'Time zone: :zone' },
         nav: {
-            switch_business: 'Switch business', pilot: 'Pilot & decisions', partners: 'Referral partners', compliance: 'Legal & compliance', team: 'Business team', support: 'Support & complaints', knowledge_taxonomy: 'Knowledge categories & sources',
+            learning_short: 'Learning', new_case_short: 'New', review_short: 'Review', knowledge_short: 'Content', compliance_short: 'Compliance', pilot_short: 'Pilot', switch_business: 'Switch business', pilot: 'Pilot & decisions', partners: 'Referral partners', compliance: 'Legal & compliance', team: 'Business team', support: 'Support & complaints', knowledge_taxonomy: 'Knowledge categories & sources',
             home: 'Home', how: 'How it works', knowledge: 'Learning centre', experts: 'Experts', about: 'About', login: 'Sign in', get_started: 'Get started',
             dashboard: 'Dashboard', menu: 'Menu', more: 'More', become_expert: 'Join as an expert', account: 'Account',
             group_business: 'My business', group_expert: 'Expert panel', group_staff: 'Hamyar team',

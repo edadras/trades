@@ -7,6 +7,7 @@ import Icon from '@/Components/ui/Icon.vue';
 import Drawer from '@/Components/ui/Drawer.vue';
 import LocaleSwitch from '@/Components/ui/LocaleSwitch.vue';
 import FlashToast from '@/Components/ui/FlashToast.vue';
+import MobileTabBar from '@/Components/ui/MobileTabBar.vue';
 import { useI18n, route } from '@/i18n';
 
 defineProps({ announcement: { type: Boolean, default: true } });
@@ -27,6 +28,15 @@ const links = computed(() => [
     { label: t('nav.about'), href: route('about'), name: 'about' },
 ]);
 const active = (name) => route().current(name);
+// Phone/tablet bottom bar: the most used destinations; everything else lives in the hamburger drawer.
+const tabs = computed(() => [
+    { label: t('nav.home'), icon: 'home', href: route('home'), match: 'home' },
+    { label: t('nav.knowledge'), icon: 'book', href: route('knowledge.index'), match: 'knowledge.*' },
+    { label: t('nav.experts'), icon: 'users', href: route('experts.directory'), match: 'experts.directory' },
+    user.value
+        ? { label: t('nav.dashboard'), icon: 'grid', href: route(user.value.home), cta: true }
+        : { label: t('nav.login'), icon: 'user', href: route('login'), match: 'login', cta: true },
+]);
 const year = new Date().getFullYear();
 </script>
 
@@ -61,9 +71,14 @@ const year = new Date().getFullYear();
         <Drawer :show="menu" @close="menu = false">
             <template #header><Logo /></template>
             <nav class="flex flex-col gap-1 p-4">
+                <Link :href="route('home')" class="rounded-2xl px-4 py-3 text-[15px] font-medium hover:bg-navy-50" :class="active('home') ? 'bg-navy-50 text-navy-900' : ''" @click="menu = false">{{ $t('nav.home') }}</Link>
                 <Link v-for="l in links" :key="l.name" :href="l.href" class="rounded-2xl px-4 py-3 text-[15px] font-medium hover:bg-navy-50" @click="menu = false">{{ l.label }}</Link>
                 <hr class="my-3 border-[var(--border)]" />
-                <Link v-if="!user" :href="route('login')" class="rounded-2xl px-4 py-3 text-[15px] font-medium hover:bg-navy-50">{{ $t('nav.login') }}</Link>
+                <Link v-if="user" :href="route(user.home)" class="rounded-2xl px-4 py-3 text-[15px] font-medium hover:bg-navy-50">{{ $t('nav.dashboard') }}</Link>
+                <template v-else>
+                    <Link :href="route('login')" class="rounded-2xl px-4 py-3 text-[15px] font-medium hover:bg-navy-50">{{ $t('nav.login') }}</Link>
+                    <Link :href="route('register')" class="rounded-2xl px-4 py-3 text-[15px] font-medium hover:bg-navy-50">{{ $t('nav.get_started') }}</Link>
+                </template>
                 <Link :href="route('register', { type: 'supporter' })" class="rounded-2xl px-4 py-3 text-[15px] font-medium hover:bg-navy-50">{{ $t('nav.become_expert') }}</Link>
                 <LocaleSwitch class="mt-2 w-fit" />
             </nav>
@@ -72,7 +87,7 @@ const year = new Date().getFullYear();
         <main><slot /></main>
 
         <footer class="mt-20 bg-[#1b1c1f] text-white">
-            <div class="mx-auto max-w-6xl px-5 py-14 sm:px-8">
+            <div class="mx-auto max-w-6xl px-5 pb-32 pt-14 sm:px-8 lg:pb-14">
                 <div class="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)]">
                     <div>
                         <Logo light />
@@ -111,6 +126,7 @@ const year = new Date().getFullYear();
                 <div class="mt-12 border-t border-white/10 pt-6 text-center text-sm text-white/60">© {{ year }} {{ $t('app.name') }} — {{ $t('app.tagline') }}</div>
             </div>
         </footer>
+        <MobileTabBar :items="tabs" :more-label="$t('nav.menu')" :more-open="menu" @more="menu = true" />
         <FlashToast />
     </div>
 </template>

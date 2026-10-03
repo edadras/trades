@@ -1,7 +1,7 @@
 <script setup>
 // 9-step registration wizard: basics → company → industry → size → region → contact → needs → documents → privacy.
-import { computed } from 'vue';
-import { useForm, Link, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import { useForm, Link, router, usePage } from '@inertiajs/vue3';
 import SeoHead from '@/Components/ui/SeoHead.vue';
 import Logo from '@/Components/ui/Logo.vue';
 import Field from '@/Components/ui/Field.vue';
@@ -12,6 +12,8 @@ import Uploader from '@/Components/ui/Uploader.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import LocaleSwitch from '@/Components/ui/LocaleSwitch.vue';
 import FlashToast from '@/Components/ui/FlashToast.vue';
+import Drawer from '@/Components/ui/Drawer.vue';
+import MobileTabBar from '@/Components/ui/MobileTabBar.vue';
 import { route, useI18n } from '@/i18n';
 
 const props = defineProps({ business: Object, step: Number, steps: Number });
@@ -40,17 +42,29 @@ const submit = () => {
     form.post(route('onboarding.store'), { forceFormData: current.value === 8, preserveScroll: true, onSuccess: () => form.reset('documents') });
 };
 const levels = ['private', 'case_team', 'verified_experts', 'public'];
+const menu = ref(false);
+const logout = () => router.post(route('logout'));
+// Until onboarding is finished the business panel is not available, so the mobile bar offers what is.
+const tabs = computed(() => [
+    { label: t('onboarding.title'), short: t('nav.dashboard'), icon: 'briefcase', href: route('onboarding.show'), match: 'onboarding.show' },
+    { label: t('nav.support'), icon: 'info', href: route('support.index'), match: 'support.index' },
+    { label: t('nav.settings'), icon: 'settings', href: route('settings.profile'), match: 'settings.*' },
+    { label: t('nav.home'), icon: 'home', href: route('home'), match: 'home' },
+]);
 const privacyFields = Object.keys(b.privacy);
 </script>
 
 <template>
     <div class="min-h-screen bg-[var(--surface-muted)]">
         <SeoHead :title="$t('onboarding.title')" />
-        <header class="flex items-center justify-between px-5 py-5 sm:px-10">
+        <header class="flex items-center justify-between gap-2 px-4 py-4 sm:px-10 sm:py-5">
             <Logo />
-            <LocaleSwitch />
+            <div class="flex items-center gap-1.5">
+                <LocaleSwitch />
+                <button type="button" class="grid size-11 place-items-center rounded-full bg-white text-ink ring-1 ring-[var(--border)] lg:hidden" :aria-label="$t('nav.menu')" :aria-expanded="menu" @click="menu = true"><Icon name="menu" /></button>
+            </div>
         </header>
-        <div class="mx-auto grid grid-cols-1 max-w-6xl gap-8 px-5 pb-16 sm:px-10 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <div class="mx-auto grid grid-cols-1 max-w-6xl gap-8 px-4 pb-32 sm:px-10 lg:pb-16 lg:grid-cols-[260px_minmax(0,1fr)]">
             <aside class="lg:sticky lg:top-6 lg:self-start">
                 <p class="text-sm text-gray-500">{{ $t('onboarding.progress', { n: number(current), total: number(steps) }) }}</p>
                 <div class="mt-2 h-2 rounded-full bg-navy-100"><div class="h-full rounded-full bg-navy-600 transition-all duration-500" :style="{ width: `${(current / steps) * 100}%` }" /></div>
@@ -142,6 +156,24 @@ const privacyFields = Object.keys(b.privacy);
                 </form>
             </main>
         </div>
+        <Drawer :show="menu" @close="menu = false">
+            <template #header><Logo /></template>
+            <div class="space-y-6 p-4">
+                <div>
+                    <p class="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{{ $t('onboarding.title') }}</p>
+                    <component :is="i + 1 <= business.onboarding_step ? Link : 'span'" v-for="(k, i) in keys" :key="k" :href="i + 1 <= business.onboarding_step ? route('onboarding.show', { step: i + 1 }) : undefined" class="flex items-center gap-3 rounded-2xl px-3 py-3 text-[15px]" :class="i + 1 === current ? 'bg-navy-950 text-white' : i + 1 <= business.onboarding_step ? 'hover:bg-navy-50' : 'text-gray-400'">
+                        <span class="grid size-6 place-items-center rounded-full text-[11px]" :class="i + 1 === current ? 'bg-white text-navy-950' : i + 1 < business.onboarding_step ? 'bg-navy-950 text-white' : 'bg-gray-200 text-gray-600'"><Icon v-if="i + 1 < business.onboarding_step && i + 1 !== current" name="check" :size="12" /><template v-else>{{ number(i + 1) }}</template></span>
+                        {{ $t(`onboarding.steps.${k}`) }}
+                    </component>
+                </div>
+                <div class="border-t border-[var(--border)] pt-4">
+                    <Link :href="route('settings.profile')" class="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-navy-50"><Icon name="settings" :size="18" />{{ $t('nav.settings') }}</Link>
+                    <Link :href="route('support.index')" class="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-navy-50"><Icon name="info" :size="18" />{{ $t('nav.support') }}</Link>
+                    <button type="button" class="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-rose-600 hover:bg-rose-50" @click="logout"><Icon name="logout" :size="18" />{{ $t('nav.logout') }}</button>
+                </div>
+            </div>
+        </Drawer>
+        <MobileTabBar :items="tabs" :more-label="$t('nav.menu')" :more-open="menu" @more="menu = true" />
         <FlashToast />
     </div>
 </template>

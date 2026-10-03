@@ -13,6 +13,7 @@ use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Support\SupportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 
 Route::get('/', fn (Request $request) => redirect('/'.($request->user()?->locale ?? $request->getPreferredLanguage(config('platform.locales')) ?? config('app.locale'))));
 Route::get('sitemap.xml', Public\SitemapController::class)->name('sitemap');
@@ -233,3 +234,7 @@ Route::prefix('{locale}')->where(['locale' => 'fa|en'])->middleware('locale')->g
         });
     });
 });
+
+// Unknown addresses still run through the web middleware (session, user), so the 404 page rendered by the
+// exception handler has the visitor's language and the normal public layout (top bar, hamburger, tab bar).
+Route::fallback(fn () => abort(404));

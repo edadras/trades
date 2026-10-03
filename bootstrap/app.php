@@ -12,6 +12,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
@@ -51,7 +52,21 @@ return Application::configure(basePath: dirname(__DIR__))
         );
         $exceptions->respond(function (Response $response, Throwable $e, Request $request) {
             if (! app()->environment(['local', 'testing']) && in_array($response->getStatusCode(), [403, 404, 500, 503], true) && ! $request->expectsJson()) {
-                return Inertia::render('Error', ['status' => $response->getStatusCode()])
+                // Errors can be rendered before or outside the web middleware (unknown URL, failed model binding),
+                // so the shared props (locale, user, routes) are added here explicitly.
+                $locales = config('platform.locales');
+                $locale = in_array($request->segment(1), $locales, true)
+                    ? $request->segment(1)
+                    : ($request->user()?->locale ?? $request->getPreferredLanguage($locales) ?? config('app.locale'));
+                app()->setLocale($locale);
+                URL::defaults(['locale' => $locale]);
+                try {
+                    $shared = $request->hasSession() ? app(HandleInertiaRequests::class)->share($request) : [];
+                } catch (Throwable) {
+                    $shared = [];
+                }
+
+                return Inertia::render('Error', $shared + ['status' => $response->getStatusCode()])
                     ->toResponse($request)->setStatusCode($response->getStatusCode());
             }
             if ($response->getStatusCode() === 419) {
