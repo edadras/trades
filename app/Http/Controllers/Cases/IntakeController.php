@@ -46,5 +46,7 @@ class IntakeController extends Controller
     {
         Gate::authorize('update', $case);
         abort_unless($case->status === CaseStatus::Draft, 409);
+        // A business outside the pilot scope (or waitlisted) keeps its drafts but cannot submit new problems.
+        abort_unless($case->business->canOpenCases(), 403);
     }
 }

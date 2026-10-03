@@ -6,6 +6,7 @@ use App\Domain\Cases\Actions\TransitionCaseStatus;
 use App\Domain\Cases\CaseNotifier;
 use App\Domain\Cases\CaseTimeline;
 use App\Domain\Cases\Enums\CaseStatus;
+use App\Domain\Experts\Enums\ExpertVerificationStatus;
 use App\Domain\Matching\Enums\MatchStatus;
 use App\Domain\Matching\Models\ExpertMatch;
 use App\Models\User;
@@ -26,6 +27,10 @@ class DecideMatch
     {
         if ($match->status !== MatchStatus::Proposed) {
             throw ValidationException::withMessages(['match' => __('matching.errors.already_decided')]);
+        }
+        if ($accept && $match->expertProfile->verification_status !== ExpertVerificationStatus::Verified) {
+            $match->update(['status' => MatchStatus::Withdrawn]);
+            throw ValidationException::withMessages(['match' => __('matching.errors.expert_unavailable')]);
         }
         $case = $match->case;
 

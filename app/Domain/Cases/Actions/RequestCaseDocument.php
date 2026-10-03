@@ -27,7 +27,7 @@ class RequestCaseDocument
         ]);
         $case->update(['next_action' => $what, 'next_action_owner' => 'business', 'next_action_due_at' => $task->due_at]);
         $this->timeline->record($case, 'document_requested', ['what' => $what], $requester->id);
-        $this->notifier->notifyUser($case->business->owner, $case, 'document_requested', ['what' => $what]);
+        $this->notifier->notifyBusiness($case, 'document_requested', ['what' => $what]);
 
         return $task;
     }

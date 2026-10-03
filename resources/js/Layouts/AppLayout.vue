@@ -22,11 +22,11 @@ const userMenu = ref(false);
 
 const groups = computed(() => {
     const g = [];
-    if (has('business')) {
-        g.push({ title: t('nav.group_business'), items: [
+    if (has('business') && user.value?.has_business) {
+        g.push({ title: user.value.businesses?.length > 1 ? user.value.business?.name : t('nav.group_business'), switcher: user.value.businesses?.length > 1, items: [
             { label: t('nav.dashboard'), icon: 'home', href: route('dashboard'), match: 'dashboard', primary: true },
             { label: t('nav.cases'), icon: 'folder', href: route('cases.index'), match: 'cases.*', primary: true },
-            { label: t('nav.new_case'), icon: 'plus', href: route('cases.create'), match: 'cases.create', primary: true, cta: true },
+            ...(user.value.can_create_case ? [{ label: t('nav.new_case'), icon: 'plus', href: route('cases.create'), match: 'cases.create', primary: true, cta: true }] : []),
             { label: t('nav.learning'), icon: 'book', href: route('learning'), match: 'learning', primary: true },
             { label: t('nav.business_profile'), icon: 'briefcase', href: route('business.profile'), match: 'business.profile' },
             { label: t('nav.team'), icon: 'users', href: route('business.team.index'), match: 'business.team.*' },
@@ -64,6 +64,7 @@ const groups = computed(() => {
 const bottom = computed(() => groups.value.flatMap((g) => g.items).filter((i) => i.primary).slice(0, 4));
 const isActive = (m) => route().current(m);
 const logout = () => router.post(route('logout'));
+const switchBusiness = (id) => router.post(route('business.switch'), { business_id: id });
 </script>
 
 <template>
@@ -75,6 +76,9 @@ const logout = () => router.post(route('logout'));
             <nav class="flex-1 space-y-6 overflow-y-auto px-4 pb-6">
                 <div v-for="g in groups" :key="g.title">
                     <p class="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{{ g.title }}</p>
+                    <select v-if="g.switcher" class="input mb-2 py-2 text-sm" :value="user.business?.id" :aria-label="$t('nav.switch_business')" @change="switchBusiness($event.target.value)">
+                        <option v-for="b in user.businesses" :key="b.id" :value="b.id">{{ b.name }}</option>
+                    </select>
                     <ul class="space-y-1">
                         <li v-for="item in g.items" :key="item.href">
                             <Link :href="item.href" class="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition" :class="isActive(item.match) ? 'bg-navy-950 text-white shadow' : item.cta ? 'text-navy-800 ring-1 ring-navy-200 hover:bg-navy-50' : 'text-gray-600 hover:bg-navy-50 hover:text-ink'">
@@ -151,6 +155,9 @@ const logout = () => router.post(route('logout'));
             <div class="space-y-6 p-4">
                 <div v-for="g in groups" :key="g.title">
                     <p class="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">{{ g.title }}</p>
+                    <select v-if="g.switcher" class="input mb-2 py-2 text-sm" :value="user.business?.id" :aria-label="$t('nav.switch_business')" @change="switchBusiness($event.target.value)">
+                        <option v-for="b in user.businesses" :key="b.id" :value="b.id">{{ b.name }}</option>
+                    </select>
                     <Link v-for="item in g.items" :key="item.href" :href="item.href" class="flex items-center gap-3 rounded-2xl px-3 py-3 text-[15px]" :class="isActive(item.match) ? 'bg-navy-950 text-white' : 'hover:bg-navy-50'" @click="drawer = false">
                         <Icon :name="item.icon" :size="18" />{{ item.label }}
                     </Link>

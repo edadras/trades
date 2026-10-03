@@ -16,6 +16,7 @@ import Markdown from '@/Components/domain/Markdown.vue';
 import { route, useI18n } from '@/i18n';
 
 const props = defineProps({ article: Object, categories: Array, sources: Array, problemTypes: Array, types: Array, canApprove: Boolean });
+const canManage = computed(() => usePage().props.auth.user?.permissions?.includes('knowledge.manage'));
 const page = usePage();
 const { t } = useI18n();
 const a = props.article;
@@ -69,9 +70,10 @@ const tone = { draft: 'gray', in_review: 'amber', approved: 'green', archived: '
                     <Badge :tone="tone[a.status]">{{ $t(`content_status.${a.status}`) }}</Badge>
                     <p class="mt-3 text-xs leading-5 text-gray-500">{{ $t('knowledge_admin.ai_rule') }}</p>
                     <div class="mt-4 grid grid-cols-2 gap-2">
-                        <Button v-if="a.status === 'draft'" size="sm" variant="light" icon="send" @click="setStatus('in_review')">{{ $t('knowledge_admin.send_review') }}</Button>
+                        <Button v-if="canManage && a.status === 'draft'" size="sm" variant="light" icon="send" @click="setStatus('in_review')">{{ $t('knowledge_admin.send_review') }}</Button>
                         <Button v-if="canApprove && a.status !== 'approved'" size="sm" variant="success" icon="check" @click="setStatus('approved')">{{ $t('knowledge_admin.approve') }}</Button>
-                        <Button v-if="a.status !== 'archived'" size="sm" variant="ghost" icon="trash" @click="setStatus('archived')">{{ $t('knowledge_admin.archive') }}</Button>
+                        <Button v-if="canApprove && !canManage && a.status === 'in_review'" size="sm" variant="ghost" icon="refresh" @click="setStatus('draft')">{{ $t('knowledge_admin.send_back') }}</Button>
+                        <Button v-if="canManage && a.status !== 'archived'" size="sm" variant="ghost" icon="trash" @click="setStatus('archived')">{{ $t('knowledge_admin.archive') }}</Button>
                         <Button v-if="a.status === 'approved'" :href="route('knowledge.show', { article: a.slug })" size="sm" variant="light" icon="external">{{ $t('common.view') }}</Button>
                     </div>
                 </Card>
@@ -96,7 +98,7 @@ const tone = { draft: 'gray', in_review: 'amber', approved: 'green', archived: '
                     <ChoiceChips v-model="form.problem_types" :options="problemTypes.map((c) => ({ value: c.id, label: c.name }))" multiple />
                 </Card>
                 <Card :title="$t('expert_profile.industries')"><ChoiceChips v-model="form.industries" :options="page.props.options.industries" multiple /></Card>
-                <Button type="submit" block size="lg" icon="check" :loading="form.processing">{{ $t('common.save') }}</Button>
+                <Button v-if="canManage" type="submit" block size="lg" icon="check" :loading="form.processing">{{ $t('common.save') }}</Button>
                 <p v-if="Object.keys(form.errors).length" class="text-sm text-rose-600">{{ Object.values(form.errors)[0] }}</p>
             </div>
         </form>

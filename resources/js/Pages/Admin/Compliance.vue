@@ -1,6 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
@@ -12,6 +12,8 @@ import ChoiceChips from '@/Components/ui/ChoiceChips.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import { route, useI18n } from '@/i18n';
+
+const canOpenCases = computed(() => ['cases.review', 'cases.view_all'].some((p) => usePage().props.auth.user?.permissions?.includes(p)));
 
 const props = defineProps({ tab: String, can: Object, requests: Array, paths: Array, dataRequests: Array, complaints: Array });
 const { t, dateTime, relative } = useI18n();
@@ -133,7 +135,7 @@ const saveComplaint = (complaint) => complaintForm
                                     <Badge :tone="requestTone[r.status] ?? 'gray'" dot>{{ $t(`compliance.request_status.${r.status}`) }}</Badge>
                                 </p>
                                 <p class="mt-0.5 text-xs text-gray-500">
-                                    <span v-if="r.case_number">{{ $t('compliance.case') }} <span dir="ltr">{{ r.case_number }}</span> · </span>
+                                    <span v-if="r.case_number">{{ $t('compliance.case') }} <Link v-if="canOpenCases" :href="route('review.cases.show', { case: r.case_number })" class="font-medium text-navy-700 hover:underline" dir="ltr">{{ r.case_number }}</Link><span v-else dir="ltr">{{ r.case_number }}</span> · </span>
                                     {{ $t('compliance.requester') }}: {{ r.requester ?? '—' }} ·
                                     <span :title="dateTime(r.created_at)">{{ relative(r.created_at) }}</span>
                                 </p>
@@ -212,7 +214,7 @@ const saveComplaint = (complaint) => complaintForm
                             </p>
                             <p class="mt-0.5 text-xs text-gray-500">
                                 {{ c.user?.name ?? '—' }} ·
-                                <span v-if="c.case_number">{{ $t('compliance.case') }} <span dir="ltr">{{ c.case_number }}</span></span>
+                                <span v-if="c.case_number">{{ $t('compliance.case') }} <Link v-if="canOpenCases" :href="route('review.cases.show', { case: c.case_number })" class="font-medium text-navy-700 hover:underline" dir="ltr">{{ c.case_number }}</Link><span v-else dir="ltr">{{ c.case_number }}</span></span>
                                 <span v-else>{{ $t('complaints.no_case') }}</span>
                                 · <span :title="dateTime(c.created_at)">{{ relative(c.created_at) }}</span>
                                 <span v-if="c.assignee"> · {{ $t('complaints.assignee', { name: c.assignee.name }) }}</span>

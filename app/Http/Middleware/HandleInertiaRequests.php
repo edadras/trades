@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Domain\AI\Models\AiHumanReview;
+use App\Domain\Cases\Models\SupportCase;
 use App\Domain\Identity\Enums\Permission;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -43,7 +44,10 @@ class HandleInertiaRequests extends Middleware
                     'permissions' => $user->getAllPermissions()->pluck('name'),
                     'is_staff' => $user->isStaff(),
                     'is_admin' => $user->isAdmin(),
-                    'has_business' => (bool) $user->currentBusiness(),
+                    'has_business' => (bool) ($business = $user->currentBusiness()),
+                    'business' => $business ? ['id' => $business->id, 'name' => $business->trade_name, 'role' => $business->roleOf($user)] : null,
+                    'businesses' => $user->businesses()->get(['businesses.id', 'trade_name'])->map(fn ($b) => ['id' => $b->id, 'name' => $b->trade_name])->values(),
+                    'can_create_case' => $user->can('create', SupportCase::class),
                     'expert_status' => $user->expertProfile?->verification_status?->value,
                     'two_factor' => $user->hasTwoFactorEnabled(),
                     'email_verified' => (bool) $user->email_verified_at,

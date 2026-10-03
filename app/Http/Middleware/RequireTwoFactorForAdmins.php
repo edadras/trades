@@ -12,7 +12,7 @@ class RequireTwoFactorForAdmins
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        if (config('platform.require_admin_2fa') && $user?->isAdmin() && ! $user->hasTwoFactorEnabled()) {
+        if (config('platform.require_admin_2fa') && $user?->isStaff() && ! $user->hasTwoFactorEnabled()) {
             return redirect()->route('settings.security')->with('warning', __('auth.admin_2fa_required'));
         }
 

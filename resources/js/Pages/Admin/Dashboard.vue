@@ -22,6 +22,7 @@ const aiData = computed(() => [
     { label: t('admin.ai_urgency_changed'), value: props.charts.aiVsHuman.urgency_changed },
 ]);
 const page = usePage();
+const can = (perm) => (page.props.auth?.user?.permissions ?? []).includes(perm);
 const canViewPilot = computed(() => (page.props.auth?.user?.permissions ?? []).some((p) => p === 'pilot.manage' || p === 'reports.view'));
 const expertCols = [{ key: 'name', label: t('table.expert') }, { key: 'cases', label: t('table.cases') }, { key: 'successful', label: t('table.successful') }, { key: 'rating', label: t('table.rating') }];
 </script>
@@ -30,7 +31,7 @@ const expertCols = [{ key: 'name', label: t('table.expert') }, { key: 'cases', l
     <AppLayout :title="$t('nav.admin_dashboard')" wide>
         <template #header-actions>
             <span class="hidden sm:block"><Button v-if="canViewPilot" :href="route('admin.pilot.show')" size="sm" variant="light" icon="flag">{{ $t('dashboard2.pilot_link') }}</Button></span>
-            <span class="hidden sm:block"><Button :href="route('admin.kpis.index')" size="sm" variant="light" icon="target">{{ $t('nav.kpis') }}</Button></span>
+            <span v-if="can('kpis.manage')" class="hidden sm:block"><Button :href="route('admin.kpis.index')" size="sm" variant="light" icon="target">{{ $t('nav.kpis') }}</Button></span>
         </template>
         <section class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
             <StatCard :label="$t('admin.businesses')" :value="summary.businesses" icon="briefcase" />
@@ -54,7 +55,7 @@ const expertCols = [{ key: 'name', label: t('table.expert') }, { key: 'cases', l
         <section class="mt-8">
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="text-lg font-semibold text-ink">{{ $t('admin.kpi_title') }}</h2>
-                <Link :href="route('admin.kpis.index')" class="text-sm font-medium text-navy-700 hover:underline">{{ $t('admin.manage_targets') }}</Link>
+                <Link v-if="can('kpis.manage')" :href="route('admin.kpis.index')" class="text-sm font-medium text-navy-700 hover:underline">{{ $t('admin.manage_targets') }}</Link>
             </div>
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"><KpiCard v-for="k in kpis" :key="k.id" :kpi="k" /></div>
         </section>
@@ -72,7 +73,7 @@ const expertCols = [{ key: 'name', label: t('table.expert') }, { key: 'cases', l
 
         <Card class="mt-8" :title="$t('admin.expert_performance')">
             <DataTable :columns="expertCols" :rows="experts">
-                <template #cell-name="{ row }"><Link :href="route('admin.experts.show', { expert: row.id })" class="font-medium hover:underline">{{ row.name }}</Link></template>
+                <template #cell-name="{ row }"><Link v-if="can('experts.view')" :href="route('admin.experts.show', { expert: row.id })" class="font-medium hover:underline">{{ row.name }}</Link><span v-else class="font-medium">{{ row.name }}</span></template>
                 <template #cell-cases="{ row }">{{ number(row.cases) }}</template>
                 <template #cell-successful="{ row }">{{ number(row.successful) }}</template>
                 <template #cell-rating="{ row }">{{ row.rating ? number(row.rating) + ' / ' + number(5) : '—' }}</template>

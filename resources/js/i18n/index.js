@@ -44,7 +44,19 @@ export function useI18n() {
     const intlLocale = computed(() => (locale.value === 'fa' ? 'fa-IR' : 'en-GB'));
 
     const number = (value, options = {}) => (value === null || value === undefined ? '—' : new Intl.NumberFormat(intlLocale.value, options).format(value));
-    const date = (value, options = { dateStyle: 'medium' }) => (value ? new Intl.DateTimeFormat(intlLocale.value + (locale.value === 'fa' ? '-u-ca-persian' : ''), options).format(new Date(value)) : '—');
+    // Instants are shown in the user's own time zone (profile setting); plain dates (YYYY-MM-DD) are calendar
+    // days and must not shift across midnight, so they are formatted in UTC.
+    const timeZone = computed(() => page.props.auth?.user?.timezone || undefined);
+    const date = (value, options = { dateStyle: 'medium' }) => {
+        if (!value) return '—';
+        const plainDate = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+        const zone = plainDate ? 'UTC' : timeZone.value;
+        try {
+            return new Intl.DateTimeFormat(intlLocale.value + (locale.value === 'fa' ? '-u-ca-persian' : ''), { ...options, timeZone: zone }).format(new Date(value));
+        } catch {
+            return new Intl.DateTimeFormat(intlLocale.value + (locale.value === 'fa' ? '-u-ca-persian' : ''), options).format(new Date(value));
+        }
+    };
     const percent = (value) => (value === null || value === undefined ? '—' : `${number(value)}${locale.value === 'fa' ? '٪' : '%'}`);
     const dateTime = (value) => date(value, { dateStyle: 'medium', timeStyle: 'short' });
     const relative = (value) => {

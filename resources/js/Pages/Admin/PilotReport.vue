@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted } from 'vue';
-import { Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Card from '@/Components/ui/Card.vue';
 import Button from '@/Components/ui/Button.vue';
@@ -11,6 +11,9 @@ import DataTable from '@/Components/ui/DataTable.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import BarChart from '@/Components/charts/BarChart.vue';
 import { route, useI18n } from '@/i18n';
+
+const canManagePilot = computed(() => usePage().props.auth.user?.permissions?.includes('pilot.manage'));
+const canOpenCases = computed(() => ['cases.review', 'cases.view_all'].some((p) => usePage().props.auth.user?.permissions?.includes(p)));
 
 const props = defineProps({ report: Object, categoryNames: { type: Object, default: () => ({}) }, kpiNames: { type: Object, default: () => ({}) } });
 const { t, number, date, dateTime } = useI18n();
@@ -123,7 +126,7 @@ onBeforeUnmount(() => document.body.classList.remove('pilot-report-print'));
                     <Card :title="$t('pilot_report.sections.ai_corrections')" :padded="false" class="break-inside-avoid">
                         <p v-if="!corrections.length" class="flex items-center gap-2 px-5 pb-6 text-sm text-gray-500 sm:px-6"><Icon name="check" :size="16" />{{ $t('pilot_report.none') }}</p>
                         <DataTable v-else :columns="correctionColumns" :rows="corrections">
-                            <template #cell-case="{ row }"><Link v-if="row.case" :href="route('review.cases.show', { case: row.case })" class="font-medium hover:underline" dir="ltr">{{ row.case }}</Link><span v-else>—</span></template>
+                            <template #cell-case="{ row }"><Link v-if="row.case && canOpenCases" :href="route('review.cases.show', { case: row.case })" class="font-medium hover:underline" dir="ltr">{{ row.case }}</Link><span v-else>—</span></template>
                             <template #cell-ai="{ row }">{{ categoryLabel(row.ai) }}</template>
                             <template #cell-final="{ row }"><span :class="row.ai !== row.final ? 'font-medium text-rose-700' : ''">{{ categoryLabel(row.final) }}</span></template>
                             <template #cell-ai_urgency="{ row }">{{ urgencyLabel(row.ai_urgency) }}</template>
@@ -145,7 +148,8 @@ onBeforeUnmount(() => document.body.classList.remove('pilot-report-print'));
                             <p v-if="!slaBreaches.length" class="flex items-center gap-2 text-sm text-gray-500"><Icon name="check" :size="16" />{{ $t('pilot_report.none') }}</p>
                             <ul v-else class="flex flex-wrap gap-2">
                                 <li v-for="n in slaBreaches" :key="n">
-                                    <Link :href="route('review.cases.show', { case: n })" class="chip bg-rose-50 text-rose-700 ring-1 ring-rose-200 hover:underline" dir="ltr">{{ n }}</Link>
+                                    <Link v-if="canOpenCases" :href="route('review.cases.show', { case: n })" class="chip bg-rose-50 text-rose-700 ring-1 ring-rose-200 hover:underline" dir="ltr">{{ n }}</Link>
+                                    <span v-else class="chip bg-rose-50 text-rose-700 ring-1 ring-rose-200" dir="ltr">{{ n }}</span>
                                 </li>
                             </ul>
                         </Card>
@@ -156,7 +160,8 @@ onBeforeUnmount(() => document.body.classList.remove('pilot-report-print'));
             </section>
 
             <Card :title="$t('pilot_report.notes')" class="break-inside-avoid">
-                <form class="space-y-4 print:hidden" @submit.prevent="saveNotes">
+                <p v-if="!canManagePilot" class="whitespace-pre-line text-sm leading-7 text-gray-700">{{ report.notes || '—' }}</p>
+                <form v-else class="space-y-4 print:hidden" @submit.prevent="saveNotes">
                     <Field v-model="notesForm.notes" as="textarea" :rows="6" :hint="$t('pilot_report.notes_hint')" :error="notesForm.errors.notes" maxlength="10000" />
                     <div class="flex justify-end"><Button type="submit" icon="check" :loading="notesForm.processing">{{ $t('pilot_report.save_notes') }}</Button></div>
                 </form>

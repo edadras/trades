@@ -93,7 +93,7 @@ const eligibilityReasons = computed(() =>
                     <Link :href="route('cases.index')" class="text-sm font-medium text-navy-700 hover:underline">{{ $t('common.see_all') }}</Link>
                 </div>
                 <div v-if="cases.length" class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <CaseCard v-for="c in cases" :key="c.id" :item="c" :href="c.status === 'draft' ? route('cases.create', { case: c.number }) : route('cases.show', { case: c.number })" />
+                    <CaseCard v-for="c in cases" :key="c.id" :item="c" :href="c.status === 'draft' && $page.props.auth.user?.can_create_case ? route('cases.create', { case: c.number }) : route('cases.show', { case: c.number })" />
                 </div>
                 <EmptyState v-else icon="folder" :title="$t('dashboard.no_cases')" :text="$t('dashboard.no_cases_hint')">
                     <Button v-if="canOpenCases" :href="route('cases.create')" icon="plus">{{ $t('dashboard.new_problem') }}</Button>

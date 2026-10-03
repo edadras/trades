@@ -70,6 +70,7 @@ Route::prefix('{locale}')->where(['locale' => 'fa|en'])->middleware('locale')->g
         Route::middleware('role:business')->group(function () {
             Route::get('onboarding', [Business\OnboardingController::class, 'show'])->name('onboarding.show');
             Route::post('onboarding', [Business\OnboardingController::class, 'store'])->middleware('throttle:uploads')->name('onboarding.store');
+            Route::post('business/switch', Business\SwitchBusinessController::class)->name('business.switch');
 
             Route::middleware('onboarded')->group(function () {
                 Route::get('dashboard', Business\DashboardController::class)->name('dashboard');
@@ -92,7 +93,6 @@ Route::prefix('{locale}')->where(['locale' => 'fa|en'])->middleware('locale')->g
                 Route::post('cases/{case}/matches/{match}', [Cases\MatchController::class, 'decide'])->name('cases.matches.decide');
                 Route::post('cases/{case}/satisfaction', [Cases\OutcomeController::class, 'satisfaction'])->name('cases.satisfaction');
                 Route::post('cases/{case}/outcome/confirm', [Cases\CaseLifecycleController::class, 'confirmOutcome'])->name('cases.outcome.confirm');
-                Route::post('cases/{case}/reopen', [Cases\CaseLifecycleController::class, 'reopen'])->name('cases.reopen');
                 Route::get('cases/{case}', [Cases\CaseController::class, 'show'])->name('cases.show');
             });
         });
@@ -111,6 +111,7 @@ Route::prefix('{locale}')->where(['locale' => 'fa|en'])->middleware('locale')->g
             Route::get('messages', [Cases\MessageController::class, 'since'])->name('messages.since');
             Route::post('outcome', [Cases\OutcomeController::class, 'store'])->name('outcome.store');
             Route::post('close', [Cases\OutcomeController::class, 'close'])->name('close');
+            Route::post('reopen', [Cases\CaseLifecycleController::class, 'reopen'])->name('reopen');
             Route::patch('details', [Cases\CaseLifecycleController::class, 'updateDetails'])->name('details.update');
             Route::post('collaboration', [Cases\CaseLifecycleController::class, 'requestCollaboration'])->name('collaboration.store');
             Route::post('leave', [Cases\CaseLifecycleController::class, 'leave'])->name('leave');
@@ -133,11 +134,14 @@ Route::prefix('{locale}')->where(['locale' => 'fa|en'])->middleware('locale')->g
             });
         });
 
+        // ── Staff case view: reviewers and every role allowed to see all cases (legal, programme, network) ─
+        Route::get('review/cases/{case}', [Cases\CaseController::class, 'show'])
+            ->middleware(['staff', 'admin.2fa', 'permission:cases.review|cases.view_all'])->name('review.cases.show');
+
         // ── Expert review panel (internal case experts) ─────────────────
-        Route::prefix('review')->name('review.')->middleware(['staff', 'permission:cases.review'])->group(function () {
+        Route::prefix('review')->name('review.')->middleware(['staff', 'admin.2fa', 'permission:cases.review'])->group(function () {
             Route::get('/', [Review\ReviewQueueController::class, 'index'])->name('index');
             Route::get('cases', [Review\ReviewQueueController::class, 'cases'])->name('cases.index');
-            Route::get('cases/{case}', [Cases\CaseController::class, 'show'])->name('cases.show');
             Route::post('reviews/{review}/claim', [Review\CaseReviewController::class, 'claim'])->name('claim');
             Route::post('cases/{case}/decision', [Review\CaseReviewController::class, 'decide'])->name('cases.decide');
             Route::post('cases/{case}/reanalyze', [Review\CaseReviewController::class, 'reanalyze'])->middleware('throttle:ai')->name('cases.reanalyze');
@@ -182,10 +186,13 @@ Route::prefix('{locale}')->where(['locale' => 'fa|en'])->middleware('locale')->g
 
             Route::middleware('permission:knowledge.manage|knowledge.approve')->group(function () {
                 Route::get('knowledge', [Admin\KnowledgeAdminController::class, 'index'])->name('knowledge.index');
-                Route::get('knowledge/create', [Admin\KnowledgeAdminController::class, 'create'])->name('knowledge.create');
-                Route::post('knowledge', [Admin\KnowledgeAdminController::class, 'store'])->name('knowledge.store');
+                // Reviewers (e.g. legal) can open an article to check it; only content managers create and edit.
                 Route::get('knowledge/{article:id}/edit', [Admin\KnowledgeAdminController::class, 'edit'])->name('knowledge.edit');
-                Route::put('knowledge/{article:id}', [Admin\KnowledgeAdminController::class, 'update'])->name('knowledge.update');
+                Route::middleware('permission:knowledge.manage')->group(function () {
+                    Route::get('knowledge/create', [Admin\KnowledgeAdminController::class, 'create'])->name('knowledge.create');
+                    Route::post('knowledge', [Admin\KnowledgeAdminController::class, 'store'])->name('knowledge.store');
+                    Route::put('knowledge/{article:id}', [Admin\KnowledgeAdminController::class, 'update'])->name('knowledge.update');
+                });
                 Route::post('knowledge/{article:id}/status', [Admin\KnowledgeAdminController::class, 'status'])->name('knowledge.status');
             });
 
@@ -193,9 +200,9 @@ Route::prefix('{locale}')->where(['locale' => 'fa|en'])->middleware('locale')->g
                 Route::get('pilot', [Admin\PilotController::class, 'show'])->name('pilot.show');
                 Route::put('pilot', [Admin\PilotController::class, 'update'])->middleware('permission:pilot.manage')->name('pilot.update');
                 Route::post('pilot/gates/{gate}', [Admin\PilotController::class, 'decide'])->middleware('permission:pilot.manage')->name('pilot.gates.decide');
-                Route::post('pilot/reports', [Admin\PilotController::class, 'generateReport'])->name('pilot.reports.generate');
+                Route::post('pilot/reports', [Admin\PilotController::class, 'generateReport'])->middleware('permission:pilot.manage')->name('pilot.reports.generate');
                 Route::get('pilot/reports/{report}', [Admin\PilotController::class, 'report'])->name('pilot.reports.show');
-                Route::put('pilot/reports/{report}', [Admin\PilotController::class, 'notes'])->name('pilot.reports.notes');
+                Route::put('pilot/reports/{report}', [Admin\PilotController::class, 'notes'])->middleware('permission:pilot.manage')->name('pilot.reports.notes');
                 Route::get('pilot/reports/{report}/export', [Admin\PilotController::class, 'export'])->name('pilot.reports.export');
                 Route::post('businesses/{business}/eligibility', [Admin\PilotController::class, 'eligibility'])->middleware('permission:pilot.manage')->name('businesses.eligibility');
             });

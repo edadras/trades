@@ -12,6 +12,7 @@ return [
         'available' => 'Available this week',
     ],
     'errors' => [
+        'expert_unavailable' => 'This supporter is no longer available. Please choose another one.',
         'already_decided' => 'A decision has already been made on this proposal.',
         'not_invited' => 'This invitation is no longer valid.',
     ],

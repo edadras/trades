@@ -11,7 +11,7 @@ import Icon from '@/Components/ui/Icon.vue';
 import Badge from '@/Components/ui/Badge.vue';
 import { route } from '@/i18n';
 
-const props = defineProps({ business: Object });
+const props = defineProps({ business: Object, canEdit: { type: Boolean, default: true } });
 const opts = computed(() => usePage().props.options);
 const b = props.business;
 const form = useForm({
@@ -26,7 +26,9 @@ const levels = ['private', 'case_team', 'verified_experts', 'public'];
 
 <template>
     <AppLayout :title="$t('nav.business_profile')">
-        <form class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]" @submit.prevent="form.put(route('business.profile.update'), { preserveScroll: true })">
+        <p v-if="!canEdit" class="mb-6 flex items-start gap-2 rounded-2xl bg-sky-50 p-4 text-sm leading-6 text-sky-900 ring-1 ring-sky-200"><Icon name="info" :size="16" class="mt-1 shrink-0" />{{ $t('team.profile_readonly') }}</p>
+        <form class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]" @submit.prevent="canEdit && form.put(route('business.profile.update'), { preserveScroll: true })">
+            <fieldset :disabled="!canEdit" class="contents">
             <div class="space-y-6">
                 <Card :title="$t('onboarding.steps.basics')">
                     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -76,14 +78,15 @@ const levels = ['private', 'case_team', 'verified_experts', 'public'];
                             <a v-if="d.url" :href="d.url" class="min-w-0 flex-1 truncate hover:underline">{{ d.name }}</a>
                             <span v-else class="min-w-0 flex-1 truncate">{{ d.name }}</span>
                             <Badge :tone="d.scan_status === 'infected' ? 'red' : 'gray'">{{ $t(`scan.${d.scan_status}`) }}</Badge>
-                            <button type="button" class="text-gray-400 hover:text-rose-600" :aria-label="$t('common.delete')" @click="router.delete(route('business.documents.destroy', { document: d.id }), { preserveScroll: true })"><Icon name="trash" :size="15" /></button>
+                            <button v-if="canEdit" type="button" class="text-gray-400 hover:text-rose-600" :aria-label="$t('common.delete')" @click="router.delete(route('business.documents.destroy', { document: d.id }), { preserveScroll: true })"><Icon name="trash" :size="15" /></button>
                         </li>
                     </ul>
-                    <Uploader v-model="docs.documents" compact />
+                    <Uploader v-if="canEdit" v-model="docs.documents" compact />
                     <Button v-if="docs.documents.length" class="mt-3" size="sm" icon="upload" :loading="docs.processing" @click="docs.post(route('business.documents.store'), { forceFormData: true, preserveScroll: true, onSuccess: () => docs.reset() })">{{ $t('common.upload') }}</Button>
                 </Card>
-                <div class="sticky bottom-24 lg:bottom-6"><Button type="submit" block size="lg" :loading="form.processing" icon="check">{{ $t('common.save') }}</Button></div>
+                <div v-if="canEdit" class="sticky bottom-24 lg:bottom-6"><Button type="submit" block size="lg" :loading="form.processing" icon="check">{{ $t('common.save') }}</Button></div>
             </div>
+            </fieldset>
         </form>
     </AppLayout>
 </template>

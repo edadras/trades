@@ -41,7 +41,7 @@ class RunMatching
             if ($case->status === CaseStatus::Matching) {
                 $this->transition->handle($case, CaseStatus::ExpertProposed, null, $userId);
             }
-            $this->notifier->notifyUser($case->business->owner, $case, 'expert_suggested', ['count' => $matches->count()]);
+            $this->notifier->notifyBusiness($case, 'expert_suggested', ['count' => $matches->count()], managersOnly: true);
         } else {
             // No suitable verified expert: operations must source one manually.
             $this->timeline->record($case, 'matching_no_candidates', [], $userId, 'internal');

@@ -45,7 +45,7 @@ class ProposeExpertManually
             }
         }
         $this->timeline->record($case, 'expert_proposed_manually', ['expert' => $expert->user->name], $staff->id);
-        $this->notifier->notifyUser($case->business->owner, $case, 'expert_suggested', ['count' => 1]);
+        $this->notifier->notifyBusiness($case, 'expert_suggested', ['count' => 1], managersOnly: true);
 
         return $match;
     }

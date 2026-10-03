@@ -20,13 +20,13 @@ class BusinessProfileController extends Controller
         $business = $request->user()->currentBusiness();
         abort_unless($business, 403);
 
-        return Inertia::render('Business/Profile', ['business' => OnboardingController::payload($business)]);
+        return Inertia::render('Business/Profile', ['business' => OnboardingController::payload($business), 'canEdit' => $business->canManageTeam($request->user())]);
     }
 
     public function update(Request $request): RedirectResponse
     {
         $business = $request->user()->currentBusiness();
-        abort_unless($business && $business->hasMember($request->user()), 403);
+        abort_unless($business && $business->canManageTeam($request->user()), 403);
 
         $rules = collect(range(1, 7))->flatMap(fn ($s) => SaveOnboardingStep::rules($s))->all();
         $data = Validator::make($request->all(), $rules)->validate();
@@ -43,7 +43,7 @@ class BusinessProfileController extends Controller
     public function uploadDocument(Request $request, SaveOnboardingStep $action): RedirectResponse
     {
         $business = $request->user()->currentBusiness();
-        abort_unless($business && $business->hasMember($request->user()), 403);
+        abort_unless($business && $business->canManageTeam($request->user()), 403);
         $action->handle($business, $request->user(), 8, $request->all());
 
         return back()->with('success', __('app.saved'));
@@ -51,7 +51,7 @@ class BusinessProfileController extends Controller
 
     public function destroyDocument(Request $request, BusinessDocument $document): RedirectResponse
     {
-        abort_unless($document->business->hasMember($request->user()), 403);
+        abort_unless($document->business->canManageTeam($request->user()), 403);
         $document->delete();
 
         return back()->with('success', __('app.deleted'));

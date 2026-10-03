@@ -15,13 +15,13 @@ const setTab = (k) => router.get(route('cases.index'), { status: k }, { preserve
 
 <template>
     <AppLayout :title="$t('nav.cases')">
-        <template #header-actions><span class="hidden sm:block"><Button :href="route('cases.create')" size="sm" icon="plus">{{ $t('dashboard.new_problem') }}</Button></span></template>
+        <template #header-actions><span class="hidden sm:block"><Button v-if="$page.props.auth.user?.can_create_case" :href="route('cases.create')" size="sm" icon="plus">{{ $t('dashboard.new_problem') }}</Button></span></template>
         <Tabs :tabs="tabs" :model-value="filters.status" @update:model-value="setTab" />
         <div v-if="cases.data.length" class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <CaseCard v-for="c in cases.data" :key="c.id" :item="c" :href="c.status === 'draft' ? route('cases.create', { case: c.number }) : route('cases.show', { case: c.number })" />
+            <CaseCard v-for="c in cases.data" :key="c.id" :item="c" :href="c.status === 'draft' && $page.props.auth.user?.can_create_case ? route('cases.create', { case: c.number }) : route('cases.show', { case: c.number })" />
         </div>
         <EmptyState v-else class="mt-6" icon="folder" :title="$t('dashboard.no_cases')" :text="$t('dashboard.no_cases_hint')">
-            <Button :href="route('cases.create')" icon="plus">{{ $t('dashboard.new_problem') }}</Button>
+            <Button v-if="$page.props.auth.user?.can_create_case" :href="route('cases.create')" icon="plus">{{ $t('dashboard.new_problem') }}</Button>
         </EmptyState>
         <Pagination :meta="cases" />
     </AppLayout>

@@ -169,7 +169,7 @@ class CasePresenter
                 'reopen' => $gate->allows('reopen', $case),
                 'request_collaboration' => $gate->allows('requestCollaboration', $case),
                 'leave' => $gate->allows('leave', $case),
-                'release_experts' => ! $case->isClosed() && ($isBusiness || $gate->allows('assign', $case)),
+                'release_experts' => $gate->allows('releaseExperts', $case),
                 'edit_details' => $isBusiness && ! $case->isClosed(),
                 'record_outcome' => Gate::forUser($viewer)->allows('recordOutcome', $case),
                 'close' => $gate->allows('close', $case) && $outcome?->confirmation_status === 'confirmed' && ($case->status->canTransitionTo(CaseStatus::Closed) || in_array($case->status, [CaseStatus::InProgress, CaseStatus::Waiting], true)),

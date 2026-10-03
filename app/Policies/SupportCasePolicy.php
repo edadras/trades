@@ -10,9 +10,12 @@ use App\Models\User;
 
 class SupportCasePolicy
 {
-    public function before(User $user): ?bool
+    /** Decisions that belong to the business itself; even a super admin does not take them on its behalf. */
+    private const BUSINESS_ONLY = ['create', 'update', 'decideMatches', 'confirmOutcome', 'rate'];
+
+    public function before(User $user, string $ability): ?bool
     {
-        return $user->hasRole('super_admin') ? true : null;
+        return $user->hasRole('super_admin') && ! in_array($ability, self::BUSINESS_ONLY, true) ? true : null;
     }
 
     public function create(User $user): bool
@@ -61,7 +64,7 @@ class SupportCasePolicy
 
     public function confirmOutcome(User $user, SupportCase $case): bool
     {
-        return $this->isBusinessMember($user, $case);
+        return $this->isBusinessManager($user, $case);
     }
 
     /** Business members within the reopen window, or case managers at any time. */
@@ -75,7 +78,7 @@ class SupportCasePolicy
         }
         $closedAt = $case->closed_at ?? $case->resolved_at;
 
-        return $this->isBusinessMember($user, $case) && (! $closedAt || $closedAt->gt(now()->subDays(ReopenCase::WINDOW_DAYS)));
+        return $this->isBusinessManager($user, $case) && (! $closedAt || $closedAt->gt(now()->subDays(ReopenCase::WINDOW_DAYS)));
     }
 
     public function requestCollaboration(User $user, SupportCase $case): bool
@@ -100,12 +103,19 @@ class SupportCasePolicy
 
     public function decideMatches(User $user, SupportCase $case): bool
     {
-        return $this->isBusinessMember($user, $case);
+        return $this->isBusinessManager($user, $case);
     }
 
+    /** Team members with role "member" follow and work on cases; the owner and admins take the decisions. */
     public function recordOutcome(User $user, SupportCase $case): bool
     {
-        return ! $case->isClosed() && ($this->isBusinessMember($user, $case) || $case->hasActiveExpert($user) || $user->can(Permission::CasesManage->value));
+        return ! $case->isClosed() && ($this->isBusinessManager($user, $case) || $case->hasActiveExpert($user) || $user->can(Permission::CasesManage->value));
+    }
+
+    /** Remove an expert (staff) or ask for a replacement (business owner/admin). */
+    public function releaseExperts(User $user, SupportCase $case): bool
+    {
+        return ! $case->isClosed() && ($this->isBusinessManager($user, $case) || $user->can(Permission::CasesAssign->value));
     }
 
     public function close(User $user, SupportCase $case): bool
@@ -127,5 +137,10 @@ class SupportCasePolicy
     private function isBusinessMember(User $user, SupportCase $case): bool
     {
         return (bool) $case->business?->hasMember($user);
+    }
+
+    private function isBusinessManager(User $user, SupportCase $case): bool
+    {
+        return in_array($case->business?->roleOf($user), ['owner', 'admin'], true);
     }
 }

@@ -18,6 +18,11 @@ class InvitationController extends Controller
         $invitation = BusinessInvitation::findByToken($token);
         abort_unless($invitation, 404);
 
+        if ($request->user() && $invitation->business->hasMember($request->user())) {
+            $request->session()->put('current_business_id', $invitation->business_id);
+
+            return redirect()->route('dashboard');
+        }
         if (! $request->user()) {
             $request->session()->put('url.intended', $request->fullUrl());
         }

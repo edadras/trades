@@ -82,7 +82,7 @@ class CaseReviewController extends Controller
         Gate::authorize('assign', $case);
         $data = $request->validate(['user_id' => ['required', 'exists:users,id']]);
         $manager = User::findOrFail($data['user_id']);
-        abort_unless($manager->isStaff(), 422);
+        abort_unless($manager->isStaff() && $manager->can('cases.review'), 422);
         $case->update(['case_manager_id' => $manager->id]);
         app(CaseTimeline::class)->record($case, 'case_manager_assigned', ['name' => $manager->name]);
         if ($case->conversation) {

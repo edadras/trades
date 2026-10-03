@@ -20,7 +20,7 @@ const columns = [{ key: 'title', label: t('table.title') }, { key: 'type', label
 
 <template>
     <AppLayout :title="$t('nav.knowledge_admin')" :subtitle="$t('knowledge_admin.subtitle')" wide>
-        <template #header-actions><Button :href="route('admin.knowledge.create')" size="sm" icon="plus">{{ $t('knowledge_admin.new') }}</Button></template>
+        <template #header-actions><Button v-if="$page.props.auth.user?.permissions?.includes('knowledge.manage')" :href="route('admin.knowledge.create')" size="sm" icon="plus">{{ $t('knowledge_admin.new') }}</Button></template>
         <div class="mb-4 flex flex-wrap items-center gap-3">
             <Tabs :tabs="[{ key: '', label: $t('common.all') }, ...statuses.map((s) => ({ key: s, label: $t(`content_status.${s}`) }))]" v-model="f.status" size="sm" />
             <input v-model="f.q" type="search" class="input max-w-xs py-2" :placeholder="$t('table.search')" />

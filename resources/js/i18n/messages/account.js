@@ -3,6 +3,7 @@
 export default {
     fa: {
         team: {
+            profile_readonly: 'فقط مالک یا مدیر کسب‌وکار می‌تواند اطلاعات و مدارک کسب‌وکار را ویرایش کند. شما می‌توانید آن‌ها را مشاهده کنید.',
             title: 'تیم کسب‌وکار',
             subtitle: 'همکاران خود را دعوت کنید تا با هم پرونده‌ها را دنبال کنید.',
             members: 'اعضای تیم',
@@ -12,8 +13,8 @@ export default {
             roles_title: 'نقش‌ها چه معنایی دارند؟',
             roles_hint: {
                 owner: 'سازنده حساب کسب‌وکار؛ همه دسترسی‌ها را دارد و قابل حذف نیست.',
-                admin: 'مانند مالک می‌تواند اعضا را دعوت، حذف و نقششان را تغییر دهد.',
-                member: 'پرونده‌ها را می‌بیند و دنبال می‌کند، اما تیم را مدیریت نمی‌کند.',
+                admin: 'مانند مالک: مدیریت تیم و اطلاعات کسب‌وکار، انتخاب پشتیبان، تأیید نتیجه، بستن و بازگشایی پرونده.',
+                member: 'مسئله ثبت می‌کند و در پرونده‌ها کار می‌کند (گفتگو، اقدام‌ها، مدارک)، اما تصمیم‌ها و مدیریت تیم با مالک و مدیر است.',
             },
             change_role: 'تغییر نقش',
             remove: 'حذف از تیم',
@@ -152,6 +153,7 @@ export default {
     },
     en: {
         team: {
+            profile_readonly: 'Only the business owner or an admin can edit business details and documents. You can view them.',
             title: 'Business team',
             subtitle: 'Invite colleagues so you can follow cases together.',
             members: 'Team members',
@@ -161,8 +163,8 @@ export default {
             roles_title: 'What do the roles mean?',
             roles_hint: {
                 owner: 'Created the business account; has full access and cannot be removed.',
-                admin: 'Like the owner, can invite and remove members and change their roles.',
-                member: 'Sees and follows cases but does not manage the team.',
+                admin: 'Like the owner: manages the team and business details, chooses supporters, confirms outcomes, closes and reopens cases.',
+                member: 'Submits problems and works on cases (chat, actions, documents); decisions and team management stay with the owner and admins.',
             },
             change_role: 'Change role',
             remove: 'Remove from team',

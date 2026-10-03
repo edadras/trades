@@ -20,6 +20,10 @@ class SendScheduledReminders implements ShouldQueue
         CaseTask::query()->pending()->whereNull('reminded_at')->whereNotNull('assignee_id')
             ->whereBetween('due_at', [now(), now()->addDay()])->with(['case.business', 'assignee'])
             ->each(function (CaseTask $task) use ($notifier) {
+                // Only people still on the case are reminded (an expert may have left since the task was assigned).
+                if (! $notifier->participants($task->case)->contains('id', $task->assignee_id)) {
+                    return;
+                }
                 $notifier->notifyUser($task->assignee, $task->case, 'deadline_approaching', ['title' => $task->title, 'due' => LocalDate::format($task->due_at, $task->assignee)]);
                 $task->update(['reminded_at' => now()]);
             });
@@ -30,7 +34,8 @@ class SendScheduledReminders implements ShouldQueue
                 ->orWhereBetween('starts_at', [now()->addHours(23), now()->addHours(25)]))
             ->with('case.business')
             ->each(function (Appointment $appointment) use ($notifier) {
-                foreach (User::whereIn('id', $appointment->attendee_ids ?? [])->get() as $user) {
+                $current = $notifier->participants($appointment->case)->pluck('id');
+                foreach (User::whereIn('id', $appointment->attendee_ids ?? [])->whereIn('id', $current)->get() as $user) {
                     $notifier->notifyUser($user, $appointment->case, 'appointment_reminder', ['title' => $appointment->title, 'when' => LocalDate::format($appointment->starts_at, $user)]);
                 }
                 $appointment->update(['reminded_at' => now()]);

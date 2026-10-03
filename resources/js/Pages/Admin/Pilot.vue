@@ -314,7 +314,7 @@ const reportColumns = [
 
                 <div class="space-y-6">
                     <Card :title="$t('pilot.reports.title')" :subtitle="$t('pilot.reports.subtitle')">
-                        <form class="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end xl:grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_auto]" @submit.prevent="generateReport">
+                        <form v-if="canManage" class="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end xl:grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_auto]" @submit.prevent="generateReport">
                             <DateTimeField v-model="reportForm.week_start" mode="date" :label="$t('pilot.reports.week_start')" :hint="$t('pilot.reports.week_start_hint')" :error="reportForm.errors.week_start" />
                             <Button type="submit" icon="refresh" :loading="reportForm.processing" class="sm:mb-6 xl:mb-0 2xl:mb-6">{{ $t('pilot.reports.generate') }}</Button>
                         </form>

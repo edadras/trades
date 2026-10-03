@@ -14,7 +14,7 @@ class CaseListController extends Controller
     {
         $profile = $request->user()->expertProfile;
         abort_unless($profile, 403);
-        $cases = $profile->cases()->with(['category', 'subcategory', 'business'])->latest('cases.updated_at')->paginate(12)
+        $cases = $profile->cases()->wherePivot('status', 'active')->with(['category', 'subcategory', 'business'])->latest('cases.updated_at')->paginate(12)
             ->through(fn ($c) => $presenter->card($c) + ['stepper' => $presenter->stepper($c), 'membership' => $c->pivot->status]);
 
         return Inertia::render('Expert/Cases', ['cases' => $cases]);

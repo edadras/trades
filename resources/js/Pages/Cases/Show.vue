@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Tabs from '@/Components/ui/Tabs.vue';
 import Stepper from '@/Components/ui/Stepper.vue';
@@ -27,6 +27,7 @@ import CollaborationPanel from '@/Components/case/CollaborationPanel.vue';
 import { route, useI18n } from '@/i18n';
 
 const props = defineProps({ case: Object, tab: String, categories: Array, servicePaths: { type: Array, default: () => [] } });
+const page = usePage();
 const item = computed(() => props.case);
 const { t, relative, dateTime, option } = useI18n();
 const active = ref(props.tab ?? 'overview');
@@ -57,7 +58,8 @@ const timeline = computed(() => item.value.timeline.map((e) => ({
         reasonEvents.includes(e.type) ? e.data?.reason : null,
     ].filter(Boolean).join(' · '),
 })));
-const back = computed(() => (item.value.context === 'staff' ? route('review.cases.index') : item.value.context === 'expert' ? route('expert.cases.index') : route('cases.index')));
+const staffBack = () => (page.props.auth.user?.permissions?.includes('cases.review') ? route('review.cases.index') : route(page.props.auth.user?.home ?? 'home'));
+const back = computed(() => (item.value.context === 'staff' ? staffBack() : item.value.context === 'expert' ? route('expert.cases.index') : route('cases.index')));
 const proposals = ref(null);
 const scrollToProposals = () => proposals.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 const waiting = (on) => router.post(route('cases.waiting', { case: item.value.number }), { waiting: on }, { preserveScroll: true });

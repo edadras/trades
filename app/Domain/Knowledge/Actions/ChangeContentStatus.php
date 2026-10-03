@@ -14,6 +14,10 @@ class ChangeContentStatus
 
     public function handle(KnowledgeArticle $article, User $user, ContentStatus $status): KnowledgeArticle
     {
+        // Approvers may approve or send an article back to draft; every other change belongs to content managers.
+        if (! in_array($status, [ContentStatus::Approved, ContentStatus::Draft], true) && ! $user->can('knowledge.manage')) {
+            throw ValidationException::withMessages(['status' => __('knowledge.errors.cannot_manage')]);
+        }
         if ($status === ContentStatus::Approved) {
             if (! $user->can('knowledge.approve')) {
                 throw ValidationException::withMessages(['status' => __('knowledge.errors.cannot_approve')]);

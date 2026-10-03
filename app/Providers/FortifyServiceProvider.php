@@ -10,11 +10,14 @@ use App\Domain\Business\Models\BusinessInvitation;
 use App\Domain\Business\Models\Partner;
 use App\Http\Responses\LoginResponse;
 use App\Http\Responses\LogoutResponse;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\LogoutResponse as LogoutResponseContract;
@@ -35,6 +38,17 @@ class FortifyServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Fortify::createUsersUsing(CreateNewUser::class);
+        Fortify::authenticateUsing(function (Request $request) {
+            $user = User::where('email', strtolower((string) $request->input(Fortify::username())))->first();
+            if (! $user || ! Hash::check((string) $request->input('password'), $user->password)) {
+                return null;
+            }
+            if ($user->status !== 'active') {
+                throw ValidationException::withMessages([Fortify::username() => __('auth.suspended')]);
+            }
+
+            return $user;
+        });
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
@@ -42,7 +56,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::loginView(fn () => Inertia::render('Auth/Login', ['status' => session('status')]));
         Fortify::registerView(function (Request $request) {
             $invitation = $request->query('invitation') ? BusinessInvitation::findByToken($request->query('invitation')) : null;
-            $ref = $request->query('ref', $request->session()->get('referral'));
+            $ref = $request->query('ref');
             $partner = $ref ? Partner::where('referral_code', strtoupper($ref))->where('is_active', true)->first() : null;
 
             return Inertia::render('Auth/Register', [

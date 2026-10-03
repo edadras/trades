@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
 class CreateNewUser implements CreatesNewUsers
@@ -43,7 +44,10 @@ class CreateNewUser implements CreatesNewUsers
             ]);
 
             $invitation = filled($input['invitation'] ?? null) ? BusinessInvitation::findByToken($input['invitation']) : null;
-            if ($invitation && $invitation->isPending() && $invitation->email === $user->email) {
+            if (filled($input['invitation'] ?? null) && ! ($invitation && $invitation->isPending() && $invitation->email === $user->email)) {
+                throw ValidationException::withMessages(['email' => __('team.errors.invalid_invitation')]);
+            }
+            if ($invitation) {
                 // Joining an existing business team instead of creating a new business.
                 app(ManageTeam::class)->accept($invitation, $user);
                 $user->markEmailAsVerified();

@@ -39,7 +39,7 @@ async function poll() {
 let timer, channel;
 onMounted(async () => {
     scroll();
-    const echo = await getEcho();
+    const echo = await getEcho(page.props.app?.reverb);
     if (echo && props.item.conversation) {
         channel = echo.private(`conversations.${props.item.conversation.id}`).listen('.message.sent', (e) => { if (!messages.value.some((m) => m.id === e.message.id)) { messages.value.push(e.message); scroll(); } });
     }

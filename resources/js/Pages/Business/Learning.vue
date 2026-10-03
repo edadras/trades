@@ -18,7 +18,7 @@ defineProps({ fromCases: Array, byIndustry: Array });
                     <Badge tone="dark" class="absolute end-4 top-4"><span dir="ltr">{{ a.case_number }}</span></Badge>
                 </div>
             </div>
-            <EmptyState v-else icon="book" :title="$t('learning.empty')" :text="$t('learning.empty_hint')"><Button :href="route('cases.create')" icon="plus">{{ $t('dashboard.new_problem') }}</Button></EmptyState>
+            <EmptyState v-else icon="book" :title="$t('learning.empty')" :text="$t('learning.empty_hint')"><Button v-if="$page.props.auth.user?.can_create_case" :href="route('cases.create')" icon="plus">{{ $t('dashboard.new_problem') }}</Button></EmptyState>
         </section>
         <section v-if="byIndustry.length" class="mt-10">
             <h2 class="mb-4 text-lg font-semibold text-ink">{{ $t('learning.for_industry') }}</h2>

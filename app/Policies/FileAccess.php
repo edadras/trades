@@ -25,7 +25,8 @@ class FileAccess
     {
         return match (true) {
             $file instanceof CaseDocument => $user->can('viewConfidential', $file->case),
-            $file instanceof MessageAttachment => (bool) $file->message?->conversation?->hasMember($user) || $user->can(Permission::CasesViewAll->value),
+            $file instanceof MessageAttachment => ((bool) $file->message?->conversation?->hasMember($user) && (! $file->message->conversation->case || $user->can('view', $file->message->conversation->case)))
+                || $user->can(Permission::CasesViewAll->value),
             $file instanceof ExpertDocument => $file->expertProfile?->user_id === $user->id || $user->can(Permission::ExpertsVerify->value),
             $file instanceof BusinessDocument => $this->businessDocument($user, $file),
             default => false,

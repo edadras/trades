@@ -25,7 +25,7 @@ class RecordOutcome
     /** @param array{outcome: string, reason: string, result_summary?: string|null} $data */
     public function handle(SupportCase $case, User $user, array $data): CaseOutcome
     {
-        $byBusiness = $case->business->hasMember($user);
+        $byBusiness = in_array($case->business->roleOf($user), ['owner', 'admin'], true);
 
         $outcome = DB::transaction(function () use ($case, $user, $data) {
             $case->outcomes()->whereNull('superseded_at')->update(['superseded_at' => now()]);
@@ -46,9 +46,7 @@ class RecordOutcome
             return $this->confirm->confirm($outcome, $user);
         }
 
-        foreach ($case->business->members()->get()->push($case->business->owner)->unique('id') as $member) {
-            $this->notifier->notifyUser($member, $case, 'outcome_confirmation_requested', ['outcome' => $data['outcome']]);
-        }
+        $this->notifier->notifyBusiness($case, 'outcome_confirmation_requested', ['outcome' => $data['outcome']], managersOnly: true);
 
         return $outcome;
     }

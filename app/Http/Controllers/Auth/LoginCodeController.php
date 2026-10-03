@@ -47,7 +47,7 @@ class LoginCodeController extends Controller
     public function verify(Request $request): RedirectResponse
     {
         $data = $request->validate(['email' => ['required', 'email'], 'code' => ['required', 'digits:6']]);
-        $user = User::where('email', strtolower($data['email']))->first();
+        $user = User::where('email', strtolower($data['email']))->where('status', 'active')->first();
         $record = $user ? LoginCode::where('user_id', $user->id)->latest('id')->first() : null;
 
         if (! $record || ! $record->isUsable() || ! Hash::check($data['code'], $record->code_hash)) {

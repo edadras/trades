@@ -33,6 +33,8 @@ class ChangeCaseTeam
                 ->update(['status' => $mode === 'left' ? 'left' : 'removed', 'left_at' => now(), 'leave_reason' => $reason]);
             $case->matches()->where('expert_profile_id', $expert->id)->update(['status' => MatchStatus::Withdrawn->value, 'decision_reason' => $reason]);
             $case->conversation?->members()->where('user_id', $expert->user_id)->delete();
+            // Open actions assigned to the expert go back to the team so they are not silently lost.
+            $case->tasks()->where('assignee_id', $expert->user_id)->whereNull('completed_at')->update(['assignee_id' => null]);
             $this->timeline->record($case, 'expert_'.$mode, ['expert' => $expert->user->name, 'reason' => $reason], $actor->id);
         });
 

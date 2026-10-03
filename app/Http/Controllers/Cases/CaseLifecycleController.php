@@ -71,8 +71,8 @@ class CaseLifecycleController extends Controller
     public function releaseExpert(Request $request, SupportCase $case, ExpertProfile $expert, ChangeCaseTeam $action): RedirectResponse
     {
         $user = $request->user();
+        Gate::authorize('releaseExperts', $case);
         $isBusiness = $case->business->hasMember($user);
-        abort_unless($isBusiness || Gate::allows('assign', $case), 403);
         if (! $case->hasActiveExpert($expert->user)) {
             throw ValidationException::withMessages(['expert' => __('cases.errors.not_on_team')]);
         }

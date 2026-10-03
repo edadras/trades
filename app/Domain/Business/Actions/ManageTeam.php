@@ -6,6 +6,7 @@ use App\Domain\Business\Models\Business;
 use App\Domain\Business\Models\BusinessInvitation;
 use App\Domain\Identity\AuditLogger;
 use App\Domain\Identity\Enums\Role;
+use App\Domain\Messaging\Actions\EnsureCaseWorkspace;
 use App\Models\User;
 use App\Notifications\TeamInvitationNotification;
 use Illuminate\Support\Facades\Notification;
@@ -17,7 +18,15 @@ class ManageTeam
 {
     public const TTL_DAYS = 7;
 
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(private readonly AuditLogger $audit, private readonly EnsureCaseWorkspace $workspace) {}
+
+    /** Adds or removes the user from every case workspace of the business after a team change. */
+    private function syncWorkspaces(Business $business): void
+    {
+        foreach ($business->cases()->whereHas('conversation')->get() as $case) {
+            $this->workspace->handle($case->fresh('business'));
+        }
+    }
 
     public function invite(Business $business, User $inviter, string $email, string $role): BusinessInvitation
     {
@@ -52,6 +61,10 @@ class ManageTeam
             $user->assignRole(Role::Business->value);
         }
         $invitation->update(['accepted_at' => now()]);
+        $this->syncWorkspaces($business);
+        if (session()->isStarted()) {
+            session()->put('current_business_id', $business->id);
+        }
         $this->audit->log('team.joined', $business, ['user_id' => $user->id], $user->id);
 
         return $business;
@@ -68,6 +81,10 @@ class ManageTeam
     {
         abort_if($member->id === $business->owner_id, 422);
         $business->members()->detach($member->id);
+        $this->syncWorkspaces($business);
+        if ($member->businesses()->doesntExist() && $member->ownedBusinesses()->doesntExist()) {
+            $member->removeRole(Role::Business->value);
+        }
         $this->audit->log('team.removed', $business, ['user_id' => $member->id]);
     }
 }

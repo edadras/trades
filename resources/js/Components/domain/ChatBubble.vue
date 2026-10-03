@@ -5,8 +5,8 @@ import { useI18n } from '@/i18n';
 defineProps({ message: { type: Object, required: true }, mine: Boolean, read: Boolean });
 defineEmits(['reply']);
 
-const { dateTime, locale } = useI18n();
-const time = (v) => new Date(v).toLocaleTimeString(locale.value === 'fa' ? 'fa-IR' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
+const { dateTime, date } = useI18n();
+const time = (v) => date(v, { hour: '2-digit', minute: '2-digit' });
 </script>
 
 <template>

@@ -65,10 +65,16 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasOne(ExpertProfile::class);
     }
 
-    /** The business the user currently acts for (first membership). */
+    /**
+     * The business the user currently acts for: the one chosen with the business switcher (kept in the
+     * session) when the user belongs to several businesses, otherwise their first membership.
+     */
     public function currentBusiness(): ?Business
     {
-        return $this->businesses()->orderBy('business_members.id')->first();
+        $chosen = app()->bound('session') && session()->isStarted() ? session('current_business_id') : null;
+        $query = $this->businesses()->orderBy('business_members.id');
+
+        return ($chosen ? (clone $query)->whereKey($chosen)->first() : null) ?? $query->first();
     }
 
     public function isStaff(): bool
@@ -105,7 +111,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             $this->isStaff() && $this->can('experts.view') => 'admin.experts.index',
             $this->isStaff() && $this->can('legal.review') => 'admin.compliance.index',
             $this->hasRole(Role::Supporter->value) => 'expert.dashboard',
-            $this->hasRole(Role::Business->value) => $this->currentBusiness()?->isOnboarded() ? 'dashboard' : 'onboarding.show',
+            $this->hasRole(Role::Business->value) && $this->currentBusiness() => $this->currentBusiness()->isOnboarded() ? 'dashboard' : 'onboarding.show',
             default => 'expert.profile.edit',
         };
     }

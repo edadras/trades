@@ -9,6 +9,7 @@ use App\Domain\Cases\Enums\CaseStatus;
 use App\Domain\Cases\Models\CaseExpert;
 use App\Domain\Compliance\Actions\RequestCollaboration;
 use App\Domain\Compliance\Models\ServicePath;
+use App\Domain\Experts\Enums\ExpertVerificationStatus;
 use App\Domain\Identity\AuditLogger;
 use App\Domain\Matching\Enums\MatchStatus;
 use App\Domain\Matching\Models\ExpertMatch;
@@ -35,7 +36,7 @@ class RespondToInvitation
     /** @param array{engagement_model?: string|null, engagement_terms?: string|null} $engagement */
     public function handle(ExpertMatch $match, User $expertUser, bool $accept, ?string $reason = null, array $engagement = []): ExpertMatch
     {
-        if ($match->status !== MatchStatus::Invited) {
+        if ($match->status !== MatchStatus::Invited || $match->expertProfile->verification_status !== ExpertVerificationStatus::Verified) {
             throw ValidationException::withMessages(['match' => __('matching.errors.not_invited')]);
         }
         $case = $match->case;
@@ -43,7 +44,7 @@ class RespondToInvitation
         if (! $accept) {
             $match->update(['status' => MatchStatus::ExpertDeclined, 'decision_reason' => $reason, 'expert_decided_at' => now()]);
             $this->timeline->record($case, 'expert_declined', [], $expertUser->id);
-            $this->notifier->notifyUser($case->business->owner, $case, 'expert_declined', []);
+            $this->notifier->notifyBusiness($case, 'expert_declined', [], managersOnly: true);
             $open = $case->matches()->whereIn('status', [MatchStatus::Proposed->value, MatchStatus::Invited->value, MatchStatus::Active->value])->count();
             if ($open === 0) {
                 if ($case->status === CaseStatus::ExpertProposed) {
