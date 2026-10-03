@@ -106,7 +106,7 @@ class DashboardReport
         $rows = DB::table('case_experts')
             ->join('expert_profiles', 'expert_profiles.id', '=', 'case_experts.expert_profile_id')
             ->join('users', 'users.id', '=', 'expert_profiles.user_id')
-            ->leftJoin('case_outcomes', fn ($j) => $j->on('case_outcomes.case_id', '=', 'case_experts.case_id')->whereNull('case_outcomes.superseded_at'))
+            ->leftJoin('case_outcomes', fn ($j) => $j->on('case_outcomes.case_id', '=', 'case_experts.case_id')->whereNull('case_outcomes.superseded_at')->where('case_outcomes.confirmation_status', 'confirmed'))
             ->leftJoin('satisfaction_surveys', 'satisfaction_surveys.case_id', '=', 'case_experts.case_id')
             ->groupBy('expert_profiles.id', 'users.name', 'expert_profiles.avg_response_minutes')
             ->selectRaw("expert_profiles.id, users.name, expert_profiles.avg_response_minutes,

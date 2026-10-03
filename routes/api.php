@@ -2,6 +2,7 @@
 
 use App\Domain\Cases\Models\SupportCase;
 use App\Domain\Knowledge\Models\KnowledgeArticle;
+use App\Http\Middleware\EnsureActiveUser;
 use App\Http\Presenters\CasePresenter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 | Token API (Sanctum) for integrations and future mobile clients. Read-only in this release;
 | all writes go through the same Actions used by the web app.
 */
-Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+Route::prefix('v1')->middleware(['auth:sanctum', EnsureActiveUser::class, 'throttle:api'])->group(function () {
     Route::get('me', fn (Request $request) => $request->user()->only(['id', 'name', 'email', 'locale']) + ['roles' => $request->user()->getRoleNames()]);
 
     Route::get('cases', function (Request $request, CasePresenter $presenter) {

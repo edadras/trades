@@ -23,7 +23,8 @@ class TranscribeCaseVoice implements ShouldQueue
     public function handle(AIManager $ai, CaseTimeline $timeline): void
     {
         $case = SupportCase::find($this->caseId);
-        if (! $case?->voice_path) {
+        // Without consent to AI processing the recording never leaves the platform; reviewers listen to it instead.
+        if (! $case?->voice_path || ! $case->consents('ai_processing')) {
             return;
         }
 

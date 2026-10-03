@@ -3,9 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Domain\AI\Models\AiMessage;
+use App\Domain\Business\Models\BusinessInvitation;
 use App\Domain\Cases\Enums\CaseStatus;
 use App\Domain\Cases\Models\CaseDocument;
 use App\Domain\Cases\Models\SupportCase;
+use App\Domain\Compliance\Models\DataRequest;
 use App\Domain\Identity\AuditLogger;
 use App\Models\AuditLog;
 use Illuminate\Console\Attributes\Description;
@@ -30,9 +32,13 @@ class PruneData extends Command
         $aiMessages = AiMessage::where('created_at', '<', now()->subDays($r['ai_messages_days']));
         $audits = AuditLog::where('created_at', '<', now()->subDays($r['audit_log_days']));
         $cases = SupportCase::onlyTrashed()->where('deleted_at', '<', now()->subDays($r['soft_deleted_days']));
+        // Personal data exports are only kept long enough to be downloaded.
+        $exports = DataRequest::whereNotNull('file_path')->where('completed_at', '<', now()->subDays($r['data_exports_days']))->get();
+        $invitations = BusinessInvitation::whereNull('accepted_at')->where('expires_at', '<', now()->subDays($r['soft_deleted_days']));
 
         $this->table(['Item', 'Count'], [
             ['Case files', $files->count()], ['AI messages', $aiMessages->count()], ['Audit logs', $audits->count()], ['Soft-deleted cases', $cases->count()],
+            ['Data exports', $exports->count()], ['Expired invitations', $invitations->count()],
         ]);
 
         if ($dry) {
@@ -46,6 +52,11 @@ class PruneData extends Command
         $aiMessages->delete();
         $audits->delete();
         $cases->each(fn ($c) => $c->forceDelete());
+        foreach ($exports as $export) {
+            Storage::disk(config('platform.uploads.disk'))->delete($export->file_path);
+            $export->update(['file_path' => null]);
+        }
+        $invitations->delete();
         $audit->log('retention.pruned', null, ['files' => $files->count()], null);
 
         return self::SUCCESS;

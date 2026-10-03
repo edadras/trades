@@ -7,6 +7,7 @@ use App\Domain\Analytics\Models\Kpi;
 use App\Domain\Business\Models\Business;
 use App\Domain\Cases\Models\CaseCategory;
 use App\Domain\Identity\AuditLogger;
+use App\Domain\Pilot\Actions\EvaluateEligibility;
 use App\Domain\Pilot\Actions\GeneratePilotReport;
 use App\Domain\Pilot\Models\DecisionGate;
 use App\Domain\Pilot\Models\PilotProgram;
@@ -60,7 +61,7 @@ class PilotController extends Controller
         ]);
     }
 
-    public function update(Request $request, AuditLogger $audit): RedirectResponse
+    public function update(Request $request, AuditLogger $audit, EvaluateEligibility $eligibility): RedirectResponse
     {
         $data = $request->validate([
             'name.fa' => ['required', 'string', 'max:150'], 'name.en' => ['required', 'string', 'max:150'],
@@ -88,6 +89,9 @@ class PilotController extends Controller
         }
         $program->fill($data)->save();
         $program->ensureGates();
+        if ($program->status === 'active') {
+            $eligibility->reevaluateAll();
+        }
         $audit->log('pilot.updated', null, ['program' => $program->id]);
 
         return back()->with('success', __('app.saved'));
@@ -172,6 +176,9 @@ class PilotController extends Controller
     public function eligibility(Request $request, Business $business, AuditLogger $audit): RedirectResponse
     {
         $data = $request->validate(['eligibility_status' => ['required', Rule::in(['eligible', 'waitlisted', 'ineligible'])], 'eligibility_reason' => ['nullable', 'string', 'max:500']]);
+        // Staff decisions are marked so automatic re-evaluation (scope or profile changes) never overwrites them.
+        $reason = trim(preg_replace('/^override:?/i', '', (string) ($data['eligibility_reason'] ?? '')));
+        $data['eligibility_reason'] = 'override:'.($reason !== '' ? ' '.$reason : '');
         $business->update($data + ['pilot_program_id' => $business->pilot_program_id ?? PilotProgram::active()?->id]);
         $audit->log('pilot.eligibility_override', $business, $data);
 

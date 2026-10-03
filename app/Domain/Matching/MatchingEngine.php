@@ -110,7 +110,7 @@ class MatchingEngine
 
         $rows = DB::table('case_experts')
             ->join('cases', 'cases.id', '=', 'case_experts.case_id')
-            ->leftJoin('case_outcomes', fn ($j) => $j->on('case_outcomes.case_id', '=', 'cases.id')->whereNull('case_outcomes.superseded_at'))
+            ->leftJoin('case_outcomes', fn ($j) => $j->on('case_outcomes.case_id', '=', 'cases.id')->whereNull('case_outcomes.superseded_at')->where('case_outcomes.confirmation_status', 'confirmed'))
             ->whereIn('case_experts.expert_profile_id', $expertIds)
             ->where('cases.category_id', $categoryId)
             ->whereNotNull('case_outcomes.id')

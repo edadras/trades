@@ -49,4 +49,25 @@ class EvaluateEligibility
 
         return $business;
     }
+
+    /**
+     * Re-applies the current pilot scope to every onboarded business, oldest first so capacity goes to
+     * those who joined earlier (waitlisted businesses move up when places free). Staff overrides are kept.
+     */
+    public function reevaluateAll(): int
+    {
+        $businesses = Business::whereNotNull('onboarding_completed_at')
+            ->where(fn ($q) => $q->whereNull('eligibility_reason')->orWhere('eligibility_reason', 'not like', 'override%'))
+            ->orderBy('onboarding_completed_at')->orderBy('id')->get();
+        Business::whereIn('id', $businesses->pluck('id'))->update(['eligibility_status' => null]);
+        $businesses->each(fn (Business $business) => $this->handle($business->fresh()));
+
+        return $businesses->count();
+    }
+
+    /** Whether a staff member decided this business's eligibility by hand. */
+    public static function isOverridden(Business $business): bool
+    {
+        return str_starts_with((string) $business->eligibility_reason, 'override');
+    }
 }

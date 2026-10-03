@@ -14,6 +14,7 @@ class EnsureActiveUser
     {
         $user = $request->user();
         if ($user && $user->status !== null && $user->status !== 'active') {
+            abort_unless($request->hasSession(), 403, __('auth.suspended'));
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

@@ -22,6 +22,8 @@ class CloseCase
         }
 
         $case->caseExperts()->where('status', 'active')->update(['status' => 'completed', 'left_at' => now()]);
+        // Nothing should remind anyone about a closed case.
+        $case->appointments()->where('status', 'scheduled')->where('starts_at', '>', now())->update(['status' => 'cancelled']);
 
         return $this->transition->handle($case, CaseStatus::Closed, $reason, $user->id);
     }

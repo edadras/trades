@@ -2,6 +2,9 @@
 
 namespace App\Domain\Compliance\Actions;
 
+use App\Domain\Business\Models\BusinessInvitation;
+use App\Domain\Cases\Models\SatisfactionSurvey;
+use App\Domain\Compliance\Models\Complaint;
 use App\Domain\Compliance\Models\DataRequest;
 use App\Domain\Identity\AuditLogger;
 use App\Domain\Identity\Enums\Permission;
@@ -52,9 +55,15 @@ class ProcessDataRequest
                 'cases' => $b->cases()->get()->map(fn ($c) => [
                     'number' => $c->number, 'status' => $c->status->value, 'description' => $c->description, 'actions_taken' => $c->actions_taken,
                     'answers' => $c->answers->map->only(['question', 'answer']), 'created_at' => $c->created_at,
+                    'data_consent' => $c->data_consent,
+                    'outcomes' => $c->outcomes()->get()->map(fn ($o) => ['outcome' => $o->outcome->value, 'reason' => $o->reason, 'confirmation' => $o->confirmation_status, 'dispute_reason' => $o->dispute_reason, 'at' => $o->created_at]),
                 ]),
+                'team_role' => $b->roleOf($user),
             ]),
             'expert_profile' => $user->expertProfile?->only(['headline', 'bio', 'country', 'city', 'years_experience', 'industries', 'certifications']),
+            'satisfaction_surveys' => SatisfactionSurvey::where('user_id', $user->id)->get(['case_id', 'rating', 'comment', 'dissatisfaction_reason', 'created_at']),
+            'complaints' => Complaint::where('user_id', $user->id)->get()->map(fn ($c) => ['category' => $c->category, 'subject' => $c->subject, 'body' => $c->body, 'status' => $c->status, 'resolution' => $c->resolution, 'at' => $c->created_at]),
+            'data_requests' => DataRequest::where('user_id', $user->id)->get(['type', 'status', 'reason', 'created_at']),
             'messages' => Message::where('user_id', $user->id)->latest()->limit(5000)->get()->map(fn ($m) => ['conversation' => $m->conversation_id, 'body' => $m->body, 'at' => $m->created_at]),
         ];
 
@@ -83,7 +92,8 @@ class ProcessDataRequest
     /** Removes personal identifiers while keeping case records and the audit trail intact. */
     public function anonymize(User $user): void
     {
-        DB::transaction(function () use ($user) {
+        $originalEmail = strtolower($user->email);
+        DB::transaction(function () use ($user, $originalEmail) {
             $user->forceFill([
                 'name' => __('privacy.deleted_user'),
                 'email' => 'deleted-'.$user->id.'@deleted.invalid',
@@ -96,6 +106,9 @@ class ProcessDataRequest
                 'remember_token' => null,
             ])->save();
             $user->tokens()->delete();
+            // Free text written by the user may identify them; keep the record for the audit trail but drop the text.
+            Complaint::where('user_id', $user->id)->each(fn (Complaint $c) => $c->update(['body' => __('privacy.deleted_user'), 'subject' => '—']));
+            BusinessInvitation::where('email', $originalEmail)->delete();
             DB::table('sessions')->where('user_id', $user->id)->delete();
             $user->expertProfile?->update(['bio' => null, 'linkedin_url' => null, 'is_available' => false, 'certifications' => null]);
             $user->delete();

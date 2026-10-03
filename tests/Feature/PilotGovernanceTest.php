@@ -47,6 +47,7 @@ class PilotGovernanceTest extends TestCase
 
         $lead = $this->staff(Role::ProgramLead);
         $this->actingAs($lead)->post("/fa/admin/businesses/{$business->id}/eligibility", ['eligibility_status' => 'eligible', 'eligibility_reason' => 'Strategic partner'])->assertSessionHasNoErrors();
+        $this->assertSame('override: Strategic partner', $business->fresh()->eligibility_reason);
         $this->actingAs($user)->post('/fa/cases', ['description' => 'هزینه انرژی کارخانه ما بالا رفته است و قبض برق دو برابر شده.'])->assertRedirect();
         $this->assertSame(1, SupportCase::count());
     }

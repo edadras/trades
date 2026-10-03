@@ -35,6 +35,7 @@ return [
         'audit_log_days' => (int) env('RETENTION_AUDIT_LOG_DAYS', 1095),
         'ai_messages_days' => (int) env('RETENTION_AI_MESSAGES_DAYS', 365),
         'soft_deleted_days' => (int) env('RETENTION_SOFT_DELETED_DAYS', 90),
+        'data_exports_days' => (int) env('RETENTION_DATA_EXPORTS_DAYS', 7),
     ],
 
     'backup' => [
